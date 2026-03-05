@@ -19,10 +19,42 @@ const SEED = {
   },
   stats: { ctfs:24, writeups:18, tools:7, certs:1, streak:14, solved:89 },
   projects: [
-    {id:1,title:"PE Analyzer",desc:"Static analysis tool for PE files — extracts imports, sections, entropy, and detects common packer signatures automatically.",tech:["Python","pefile","YARA"],category:"Tool",github:"#",demo:"",featured:true},
-    {id:2,title:"Shellcode Loader",desc:"Educational process injection framework for learning Windows injection techniques in isolated lab environments.",tech:["C","WinAPI","x86 ASM"],category:"Research",github:"#",demo:"",featured:true},
-    {id:3,title:"Ghidra Scripts",desc:"Collection of automation scripts — string decryption, function renaming, anti-debug bypass helpers, and deobfuscation utilities.",tech:["Java","Ghidra API","Python"],category:"Tool",github:"#",demo:"",featured:false},
-    {id:4,title:"CTF Toolkit",desc:"Personal CTF framework with exploit helpers, format string generators, ROP chain automation, and common crypto solvers.",tech:["Python","pwntools","ROPgadget"],category:"CTF",github:"#",demo:"#",featured:true},
+    {id:1,title:"PE Analyzer",desc:"Static analysis tool for PE files — extracts imports, sections, entropy, and detects common packer signatures automatically.",
+      tech:["Python","pefile","YARA"],category:"Tool",github:"#",demo:"",featured:true,
+      fullDesc:"A command-line tool for deep static analysis of Windows PE (Portable Executable) files. Built to speed up the first-pass triage phase of malware analysis by automating the most repetitive inspection tasks.",
+      features:"• Extract all imported DLLs and functions\n• Detect section entropy (flags packed/encrypted sections)\n• Identify common packer signatures via YARA rules\n• Dump strings with entropy scoring\n• Export report as JSON or HTML\n• Supports PE32 and PE32+ (64-bit)",
+      install:"git clone https://github.com/yourusername/pe-analyzer\ncd pe-analyzer\npip install -r requirements.txt\npython pe_analyzer.py <target.exe>",
+      challenges:"Handling malformed PE headers was the hardest part — many malware samples deliberately corrupt optional header fields to break parsers. Had to implement fallback parsing logic.",
+      screenshots:"",
+      docs:"",
+    },
+    {id:2,title:"Shellcode Loader",desc:"Educational process injection framework for learning Windows injection techniques in isolated lab environments.",
+      tech:["C","WinAPI","x86 ASM"],category:"Research",github:"#",demo:"",featured:true,
+      fullDesc:"A modular Windows process injection framework built purely for education and lab use. Implements several classic and modern injection techniques side-by-side so you can compare their behavior in a debugger.",
+      features:"• Classic CreateRemoteThread injection\n• APC injection via QueueUserAPC\n• Process hollowing\n• Thread hijacking\n• Reflective DLL injection\n• Each technique has verbose debug output\n• Shellcode generation helper included",
+      install:"# Build with MinGW or MSVC\ngcc loader.c -o loader.exe -lkernel32\n# Or open in Visual Studio and build Release x64\n# Run in isolated VM only",
+      challenges:"Getting reflective DLL injection working without a loader stub required implementing a custom PE mapper entirely in shellcode — parsing the relocation table manually was painful.",
+      screenshots:"",
+      docs:"",
+    },
+    {id:3,title:"Ghidra Scripts",desc:"Collection of automation scripts — string decryption, function renaming, anti-debug bypass helpers, and deobfuscation utilities.",
+      tech:["Java","Ghidra API","Python"],category:"Tool",github:"#",demo:"",featured:false,
+      fullDesc:"A growing collection of Ghidra scripts I've written while analyzing malware samples. Each script solves a specific repetitive task that slows down reverse engineering workflows.",
+      features:"• XOR string decryptor (auto-detects key length)\n• RC4 key extractor\n• Auto-rename functions based on string references\n• Anti-debug patch helper (NOP sleds)\n• Stack string reconstructor\n• Import table rebuilder for dumped samples\n• Batch comment generator",
+      install:"# Copy scripts to Ghidra scripts directory\ncp *.java ~/ghidra_scripts/\n# In Ghidra: Window → Script Manager → Refresh\n# Scripts appear under 'lostdoor' category",
+      challenges:"The Ghidra Java API has sparse documentation. Most development was done by reading the Ghidra source code and experimenting — the FlatProgramAPI is your best friend.",
+      screenshots:"",
+      docs:"",
+    },
+    {id:4,title:"CTF Toolkit",desc:"Personal CTF framework with exploit helpers, format string generators, ROP chain automation, and common crypto solvers.",
+      tech:["Python","pwntools","ROPgadget"],category:"CTF",github:"#",demo:"#",featured:true,
+      fullDesc:"My personal CTF Swiss Army knife. A wrapper around pwntools that adds higher-level helpers, common CTF crypto solvers, and automation for repetitive exploitation tasks.",
+      features:"• Format string offset finder (auto-brute)\n• ROP chain builder with libc leak automation\n• One-gadget finder integration\n• Common CTF crypto: Caesar, Vigenere, XOR, RSA helpers\n• Heap feng shui helpers for tcache/fastbin\n• GDB automation scripts\n• Template generator for new challenges",
+      install:"git clone https://github.com/yourusername/ctf-toolkit\ncd ctf-toolkit\npip install -r requirements.txt\n# Add to PATH for global use\nexport PATH=$PATH:$(pwd)/bin",
+      challenges:"Making the ROP chain builder work reliably across different libc versions was tricky — had to build a local libc database and implement version fingerprinting via leak offsets.",
+      screenshots:"",
+      docs:"",
+    },
   ],
   writeups: [
     {id:1,title:"HTB — BinaryExploits (RE Challenge)",category:"Reverse Engineering",difficulty:"Hard",date:"2025-01-15",summary:"Analyzed a custom packer using x64dbg and Ghidra. Key technique was tracing the unpacking stub via hardware breakpoints on memory write.",tags:["unpacking","x64dbg","PE"],url:"#",
@@ -93,8 +125,8 @@ const CATS        = ["Reverse Engineering","Binary Exploitation","Malware Analys
 
 // ─── THEME ────────────────────────────────────────────────────────────────────
 const C = {
-  bg:"#07070f", bg1:"#0c0c18", bg2:"#101020",
-  border:"#181828", border2:"#1e1e32",
+  bg:"#0e0e1a", bg1:"#14141f", bg2:"#1a1a28",
+  border:"#242438", border2:"#2a2a40",
   g:"#00ff88", b:"#00ccff", o:"#ff6b35", r:"#ff3355", p:"#a855f7",
   text:"#c8d0dc", muted:"#445566", dim:"#252535",
 };
@@ -538,6 +570,184 @@ function AboutPage({data,mobile}){
 // ═══════════════════════════════════════════════════════════════════════════════
 //  PROJECTS
 // ═══════════════════════════════════════════════════════════════════════════════
+function ProjectCard({p,mobile}){
+  const [open,setOpen]=useState(false);
+  const hasContent=p.fullDesc||p.features||p.install||p.challenges;
+  return (
+    <div className="fin" style={{background:C.bg1,
+      border:`1px solid ${open?C.g+"66":C.border}`,
+      borderRadius:8,overflow:"hidden",transition:"border .2s",
+      gridColumn: open&&!mobile?"span 2":"span 1"}}>
+
+      {/* ── Header (always visible) ── */}
+      <div onClick={()=>hasContent&&setOpen(o=>!o)}
+        style={{padding:"20px 22px",cursor:hasContent?"pointer":"default",position:"relative"}}>
+        {/* Category badge */}
+        <div style={{position:"absolute",top:0,right:0,background:C.g+"15",
+          color:C.g,fontSize:9,padding:"4px 11px",borderBottomLeftRadius:6,letterSpacing:1}}>
+          {p.category}{p.featured&&" ★"}
+        </div>
+        <div style={{fontSize:14,color:"#fff",fontWeight:700,marginBottom:8,paddingRight:80}}>{p.title}</div>
+        <p style={{fontSize:12,color:"#667788",lineHeight:1.75,marginBottom:14}}>{p.desc}</p>
+        <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:14}}>
+          {(Array.isArray(p.tech)?p.tech:p.tech?.split(",").map(t=>t.trim())||[]).map(t=>(
+            <Tag key={t} c={C.b}>{t}</Tag>
+          ))}
+        </div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div style={{display:"flex",gap:9}}>
+            {p.github&&p.github!=="#"&&(
+              <a href={p.github} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()}>
+                <Btn sm outline accent={C.g}>⟨/⟩ CODE</Btn>
+              </a>
+            )}
+            {p.demo&&p.demo!=="#"&&(
+              <a href={p.demo} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()}>
+                <Btn sm outline accent={C.b}>↗ DEMO</Btn>
+              </a>
+            )}
+            {p.docs&&p.docs!=="#"&&(
+              <a href={p.docs} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()}>
+                <Btn sm outline accent={C.p}>📖 DOCS</Btn>
+              </a>
+            )}
+          </div>
+          {hasContent&&(
+            <div style={{width:22,height:22,borderRadius:"50%",background:C.g+"18",
+              border:`1px solid ${C.g}44`,display:"flex",alignItems:"center",
+              justifyContent:"center",fontSize:11,color:C.g,flexShrink:0}}>
+              {open?"▴":"▾"}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Expanded content ── */}
+      {open&&(
+        <div style={{borderTop:`1px solid ${C.border}`,padding:"20px 22px 26px",
+          display:"flex",flexDirection:"column",gap:22}}>
+
+          {/* Full description */}
+          {p.fullDesc&&(
+            <div>
+              <div style={{fontSize:9,color:C.g,letterSpacing:2,marginBottom:10,
+                display:"flex",alignItems:"center",gap:8}}>
+                📌 FULL DESCRIPTION
+                <div style={{flex:1,height:1,background:C.g+"22"}}/>
+              </div>
+              <p style={{fontSize:13,color:"#7a8899",lineHeight:1.9}}>{p.fullDesc}</p>
+            </div>
+          )}
+
+          {/* Tech stack details */}
+          {p.tech&&(
+            <div>
+              <div style={{fontSize:9,color:C.b,letterSpacing:2,marginBottom:10,
+                display:"flex",alignItems:"center",gap:8}}>
+                🔧 TECH STACK
+                <div style={{flex:1,height:1,background:C.b+"22"}}/>
+              </div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
+                {(Array.isArray(p.tech)?p.tech:p.tech.split(",").map(t=>t.trim())).map((t,i)=>(
+                  <div key={i} style={{background:C.b+"12",border:`1px solid ${C.b}33`,
+                    borderRadius:5,padding:"6px 12px",fontSize:11,color:C.b}}>{t}</div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Features */}
+          {p.features&&(
+            <div>
+              <div style={{fontSize:9,color:C.p,letterSpacing:2,marginBottom:12,
+                display:"flex",alignItems:"center",gap:8}}>
+                ✨ FEATURES
+                <div style={{flex:1,height:1,background:C.p+"22"}}/>
+              </div>
+              <div style={{display:"flex",flexDirection:"column",gap:7}}>
+                {p.features.split("\n").filter(f=>f.trim()).map((feat,i)=>(
+                  <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+                    <span style={{color:C.p,flexShrink:0,marginTop:1}}>◆</span>
+                    <span style={{fontSize:12,color:C.text,lineHeight:1.6}}>
+                      {feat.replace(/^[•◆\-]\s*/,"")}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Installation */}
+          {p.install&&(
+            <div>
+              <div style={{fontSize:9,color:"#f59e0b",letterSpacing:2,marginBottom:10,
+                display:"flex",alignItems:"center",gap:8}}>
+                ⚡ INSTALLATION & USAGE
+                <div style={{flex:1,height:1,background:"#f59e0b22"}}/>
+              </div>
+              <div style={{background:"#0a100a",border:`1px solid #f59e0b22`,
+                borderRadius:6,padding:"14px 16px",fontFamily:"monospace",
+                fontSize:11,color:"#a0b060",lineHeight:1.8,whiteSpace:"pre-wrap",
+                overflowX:"auto"}}>
+                {p.install}
+              </div>
+            </div>
+          )}
+
+          {/* Screenshots */}
+          <div>
+            <div style={{fontSize:9,color:C.muted,letterSpacing:2,marginBottom:10,
+              display:"flex",alignItems:"center",gap:8}}>
+              🖼️ SCREENSHOTS
+              <div style={{flex:1,height:1,background:C.border}}/>
+            </div>
+            {p.screenshots?(
+              <div style={{fontSize:11,color:C.muted}}>{p.screenshots}</div>
+            ):(
+              <div style={{background:C.bg2,border:`1px dashed ${C.border}`,
+                borderRadius:6,padding:"22px",textAlign:"center",fontSize:11,color:C.dim}}>
+                No screenshots yet — add them from the admin dashboard
+              </div>
+            )}
+          </div>
+
+          {/* Challenges & learned */}
+          {p.challenges&&(
+            <div>
+              <div style={{fontSize:9,color:C.o,letterSpacing:2,marginBottom:10,
+                display:"flex",alignItems:"center",gap:8}}>
+                🧠 CHALLENGES & WHAT I LEARNED
+                <div style={{flex:1,height:1,background:C.o+"22"}}/>
+              </div>
+              <div style={{background:C.o+"08",border:`1px solid ${C.o}22`,
+                borderRadius:6,padding:"12px 16px",fontSize:12,color:"#9a7060",lineHeight:1.8}}>
+                {p.challenges}
+              </div>
+            </div>
+          )}
+
+          {/* Links */}
+          <div>
+            <div style={{fontSize:9,color:C.muted,letterSpacing:2,marginBottom:10,
+              display:"flex",alignItems:"center",gap:8}}>
+              🔗 LINKS
+              <div style={{flex:1,height:1,background:C.border}}/>
+            </div>
+            <div style={{display:"flex",gap:9,flexWrap:"wrap"}}>
+              {p.github&&<a href={p.github} target="_blank" rel="noreferrer"><Btn sm outline accent={C.g}>⟨/⟩ GitHub</Btn></a>}
+              {p.demo&&<a href={p.demo} target="_blank" rel="noreferrer"><Btn sm outline accent={C.b}>↗ Live Demo</Btn></a>}
+              {p.docs&&<a href={p.docs} target="_blank" rel="noreferrer"><Btn sm outline accent={C.p}>📖 Docs</Btn></a>}
+              {!p.github&&!p.demo&&!p.docs&&(
+                <span style={{fontSize:11,color:C.dim}}>No links added yet</span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ProjectsPage({data,mobile,tablet}){
   const [filter,setFilter]=useState("All");
   const cats=["All","Tool","Research","CTF"];
@@ -550,21 +760,7 @@ function ProjectsPage({data,mobile,tablet}){
       </div>
       <div style={{display:"grid",gridTemplateColumns:mobile?"1fr":tablet?"1fr 1fr":"1fr 1fr",gap:16}}>
         {filtered.map((p,i)=>(
-          <Card key={p.id} style={{position:"relative",overflow:"hidden",animationDelay:`${i*.07}s`}} className="fin">
-            <div style={{position:"absolute",top:0,right:0,background:C.g+"15",
-              color:C.g,fontSize:9,padding:"4px 11px",borderBottomLeftRadius:6,letterSpacing:1}}>
-              {p.category}{p.featured&&" ★"}
-            </div>
-            <div style={{fontSize:14,color:"#fff",fontWeight:700,marginBottom:8,paddingRight:80}}>{p.title}</div>
-            <p style={{fontSize:12,color:"#556677",lineHeight:1.75,marginBottom:16}}>{p.desc}</p>
-            <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:18}}>
-              {p.tech.map(t=><Tag key={t} c={C.b}>{t}</Tag>)}
-            </div>
-            <div style={{display:"flex",gap:9}}>
-              <Btn sm outline accent={C.g}>⟨/⟩ CODE</Btn>
-              {p.demo&&<Btn sm outline accent={C.b}>↗ DEMO</Btn>}
-            </div>
-          </Card>
+          <ProjectCard key={p.id} p={p} mobile={mobile}/>
         ))}
       </div>
     </div>
@@ -1264,30 +1460,89 @@ function ARow({title,sub,tags,onEdit,onDelete,accent}){
 function AProjects({data,update,mobile}){
   const [adding,setAdding]=useState(false);
   const [editing,setEditing]=useState(null);
+
   const fields=[
-    {key:"title",      label:"TITLE",    full:true, placeholder:"PE Analyzer"},
-    {key:"desc",       label:"DESCRIPTION",type:"textarea",full:true},
-    {key:"tech",       label:"TECH (comma separated)", placeholder:"Python, pefile, YARA"},
-    {key:"category",   label:"CATEGORY", type:"select",opts:["Tool","Research","CTF","Other"]},
-    {key:"github",     label:"GITHUB URL"},
-    {key:"demo",       label:"DEMO URL"},
+    {key:"title",     label:"TITLE",full:true,placeholder:"PE Analyzer"},
+    {key:"desc",      label:"SHORT DESCRIPTION",type:"textarea",full:true,placeholder:"One paragraph overview shown on the card..."},
+    {key:"fullDesc",  label:"FULL DESCRIPTION",type:"textarea",full:true,placeholder:"Detailed explanation of what the project does and why you built it..."},
+    {key:"tech",      label:"TECH STACK (comma separated)",full:true,placeholder:"Python, pefile, YARA"},
+    {key:"category",  label:"CATEGORY",type:"select",opts:["Tool","Research","CTF","Other"]},
+    {key:"features",  label:"FEATURES (one per line)",type:"textarea",full:true,placeholder:"• Extract imports\n• Detect entropy\n• YARA scanning"},
+    {key:"install",   label:"INSTALLATION & USAGE",type:"textarea",full:true,placeholder:"git clone ...\npip install -r requirements.txt\npython tool.py <target>"},
+    {key:"challenges",label:"CHALLENGES & WHAT I LEARNED",type:"textarea",full:true,placeholder:"What was hard? What did you figure out?"},
+    {key:"github",    label:"GITHUB URL",placeholder:"https://github.com/..."},
+    {key:"demo",      label:"DEMO URL",placeholder:"https://..."},
+    {key:"docs",      label:"DOCS URL",placeholder:"https://..."},
   ];
+
   const add=(v)=>{
-    update(d=>({...d,projects:[...d.projects,{...v,id:Date.now(),tech:v.tech.split(",").map(t=>t.trim()).filter(Boolean),featured:false}]}));
+    const techArr=v.tech?v.tech.split(",").map(t=>t.trim()).filter(Boolean):[];
+    update(d=>({...d,projects:[...d.projects,{...v,id:Date.now(),tech:techArr,featured:false,screenshots:""}]}));
     setAdding(false);
   };
+
+  const save=(id,v)=>{
+    const techArr=Array.isArray(v.tech)?v.tech:v.tech?.split(",").map(t=>t.trim()).filter(Boolean)||[];
+    update(d=>({...d,projects:d.projects.map(p=>p.id!==id?p:{...p,...v,tech:techArr})}));
+    setEditing(null);
+  };
+
   const del=(id)=>update(d=>({...d,projects:d.projects.filter(p=>p.id!==id)}));
+
   return (
     <div>
       <ATitleBar label="PROJECTS">
-        <Btn sm onClick={()=>setAdding(true)}>+ ADD</Btn>
+        <Btn sm onClick={()=>{setAdding(true);setEditing(null);}}>+ ADD</Btn>
       </ATitleBar>
-      {adding&&<AForm fields={fields} onSave={add} onCancel={()=>setAdding(false)} mobile={mobile}/>}
-      <AList items={data.projects} renderRow={(p)=>(
-        <ARow key={p.id} title={p.title} sub={p.category}
-          tags={p.tech} accent={C.b}
-          onDelete={()=>del(p.id)}/>
-      )}/>
+
+      {adding&&(
+        <AForm fields={fields} onSave={add} onCancel={()=>setAdding(false)} mobile={mobile}/>
+      )}
+
+      <div style={{display:"flex",flexDirection:"column",gap:9}}>
+        {!data.projects.length&&(
+          <div style={{color:C.dim,textAlign:"center",padding:"28px 0",
+            border:`1px dashed ${C.border}`,borderRadius:7,fontSize:11}}>
+            Nothing here yet.
+          </div>
+        )}
+        {data.projects.map((p)=>(
+          <div key={p.id}>
+            {editing===p.id?(
+              <AForm
+                fields={fields}
+                initial={{...p,
+                  tech:Array.isArray(p.tech)?p.tech.join(", "):p.tech||"",
+                }}
+                onSave={(v)=>save(p.id,v)}
+                onCancel={()=>setEditing(null)}
+                mobile={mobile}/>
+            ):(
+              <div style={{background:C.bg2,border:`1px solid ${C.border}`,
+                borderRadius:6,padding:"11px 14px"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10,flexWrap:"wrap"}}>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:12,color:"#fff",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.title}</div>
+                    <div style={{fontSize:10,color:C.muted,marginTop:2}}>{p.category}{p.featured?" · ★ Featured":""}</div>
+                    <div style={{display:"flex",gap:5,marginTop:6,flexWrap:"wrap"}}>
+                      {(Array.isArray(p.tech)?p.tech:p.tech?.split(","))?.filter(Boolean).slice(0,4).map((t,i)=>(
+                        <Tag key={i} c={C.b}>{t}</Tag>
+                      ))}
+                      {p.features&&<Tag c={C.p}>✨ Features</Tag>}
+                      {p.install&&<Tag c="#f59e0b">⚡ Install</Tag>}
+                      {p.challenges&&<Tag c={C.o}>🧠 Challenges</Tag>}
+                    </div>
+                  </div>
+                  <div style={{display:"flex",gap:7,flexShrink:0}}>
+                    <Btn sm outline accent={C.b} onClick={()=>setEditing(p.id)}>EDIT</Btn>
+                    <Btn sm outline accent={C.r} onClick={()=>del(p.id)}>DEL</Btn>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
