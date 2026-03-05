@@ -25,10 +25,38 @@ const SEED = {
     {id:4,title:"CTF Toolkit",desc:"Personal CTF framework with exploit helpers, format string generators, ROP chain automation, and common crypto solvers.",tech:["Python","pwntools","ROPgadget"],category:"CTF",github:"#",demo:"#",featured:true},
   ],
   writeups: [
-    {id:1,title:"HTB — BinaryExploits (RE Challenge)",category:"Reverse Engineering",difficulty:"Hard",date:"2025-01-15",summary:"Analyzed a custom packer using x64dbg and Ghidra. Key technique was tracing the unpacking stub via hardware breakpoints on memory write.",tags:["unpacking","x64dbg","PE"],url:"#"},
-    {id:2,title:"PicoCTF 2024 — Buffer Overflow Series",category:"Binary Exploitation",difficulty:"Medium",date:"2025-02-01",summary:"Exploited classic stack buffer overflows through NX, ASLR, and full RELRO bypass. Final challenge required a ret2libc chain.",tags:["BOF","ROP","pwntools"],url:"#"},
-    {id:3,title:"Flare-On 2024 — Challenge 3",category:"Malware Analysis",difficulty:"Hard",date:"2025-02-20",summary:"Deobfuscated a multi-stage loader using IDA Pro. Final payload was a keylogger with C2 over DNS tunneling — extracted IOCs and wrote YARA rule.",tags:["malware","IDA","C2","DNS"],url:"#"},
-    {id:4,title:"HTB — HardwareHack",category:"Hardware Security",difficulty:"Insane",date:"2025-03-01",summary:"UART console access via logic analyzer, extracted firmware, found hardcoded credentials in decompiled NVRAM routines using Binwalk + Ghidra.",tags:["UART","firmware","hardware"],url:"#"},
+    {id:1,title:"HTB — BinaryExploits (RE Challenge)",category:"Reverse Engineering",difficulty:"Hard",date:"2025-01-15",summary:"Analyzed a custom packer using x64dbg and Ghidra. Key technique was tracing the unpacking stub via hardware breakpoints on memory write.",tags:["unpacking","x64dbg","PE"],url:"#",
+      tools:["x64dbg","Ghidra","PE-bear"],
+      steps:"1. Loaded binary in PE-bear to inspect section entropy — high entropy in .text indicated packing.\n2. Set hardware breakpoint on memory write in x64dbg to catch unpacking stub.\n3. Traced execution until OEP (Original Entry Point) was reached.\n4. Dumped unpacked binary and fixed imports using Scylla.\n5. Analyzed clean binary in Ghidra to understand core functionality.",
+      takeaways:"Hardware breakpoints on VirtualAlloc return value is the fastest way to catch most unpackers. Always check section entropy first.",
+      flag:"HTB{unp4ck_th3_s3cr3t_0f_m3m0ry}",
+      references:"https://github.com/hasherezade/pe-bear\nhttps://x64dbg.com",
+      screenshots:"",
+    },
+    {id:2,title:"PicoCTF 2024 — Buffer Overflow Series",category:"Binary Exploitation",difficulty:"Medium",date:"2025-02-01",summary:"Exploited classic stack buffer overflows through NX, ASLR, and full RELRO bypass. Final challenge required a ret2libc chain.",tags:["BOF","ROP","pwntools"],url:"#",
+      tools:["pwntools","GDB+PEDA","ROPgadget","checksec"],
+      steps:"1. Used checksec to identify protections: NX enabled, no canary, partial RELRO.\n2. Found buffer overflow with cyclic pattern — offset was 72 bytes.\n3. Leaked libc base address via puts() GOT entry.\n4. Calculated system() and /bin/sh addresses using libc offsets.\n5. Built ret2libc chain: pop rdi → /bin/sh → system().",
+      takeaways:"Always leak libc first before building ROP chain. ret2libc is the go-to when NX is on but no canary exists.",
+      flag:"picoCTF{b0f_m4st3r_l3v3l_c0mpl3t3}",
+      references:"https://github.com/Gallopsled/pwntools\nhttps://github.com/JonathanSalwan/ROPgadget",
+      screenshots:"",
+    },
+    {id:3,title:"Flare-On 2024 — Challenge 3",category:"Malware Analysis",difficulty:"Hard",date:"2025-02-20",summary:"Deobfuscated a multi-stage loader using IDA Pro. Final payload was a keylogger with C2 over DNS tunneling — extracted IOCs and wrote YARA rule.",tags:["malware","IDA","C2","DNS"],url:"#",
+      tools:["IDA Pro","Wireshark","YARA","x64dbg","Remnux"],
+      steps:"1. Static analysis in IDA — identified string decryption routine using XOR with rolling key.\n2. Wrote IDA Python script to decrypt all strings automatically.\n3. Identified second stage download from hardcoded URL.\n4. Ran in isolated VM with FakeNet-NG — captured DNS C2 traffic.\n5. Extracted keylogger payload, analyzed exfiltration format, wrote YARA rule.",
+      takeaways:"DNS tunneling is easy to miss without proper network monitoring. FakeNet-NG is essential for dynamic malware analysis.",
+      flag:"Fl4r3-0n{dns_tunn3l_d3t3ct3d_y4r4_writ3r}",
+      references:"https://github.com/mandiant/flare-fakenet-ng\nhttps://remnux.org",
+      screenshots:"",
+    },
+    {id:4,title:"HTB — HardwareHack",category:"Hardware Security",difficulty:"Insane",date:"2025-03-01",summary:"UART console access via logic analyzer, extracted firmware, found hardcoded credentials in decompiled NVRAM routines using Binwalk + Ghidra.",tags:["UART","firmware","hardware"],url:"#",
+      tools:["Logic Analyzer","Binwalk","Ghidra","minicom","sasquatch"],
+      steps:"1. Used logic analyzer to identify UART TX/RX pins on PCB — 115200 baud.\n2. Connected USB-UART adapter, got boot console in minicom.\n3. Extracted firmware via /proc/mtd — dd'd flash partition.\n4. Ran binwalk -e to extract SquashFS filesystem.\n5. Found nvram_get() calls in Ghidra — traced to hardcoded admin credentials.",
+      takeaways:"Always look for UART/JTAG test points near the SoC. Boot logs reveal the entire system architecture.",
+      flag:"HTB{h4rdw4r3_h4ck1ng_1s_fun_4nd_r34l}",
+      references:"https://github.com/ReFirmLabs/binwalk\nhttps://github.com/devttys0/sasquatch",
+      screenshots:"",
+    },
   ],
   certs: [
     {id:1,name:"eJPTv2",issuer:"eLearnSecurity",date:"2024",status:"Earned",color:"#22c55e"},
@@ -546,6 +574,188 @@ function ProjectsPage({data,mobile,tablet}){
 // ═══════════════════════════════════════════════════════════════════════════════
 //  WRITEUPS
 // ═══════════════════════════════════════════════════════════════════════════════
+function WriteupCard({w,mobile}){
+  const [open,setOpen]=useState(false);
+  const hasContent=w.steps||w.tools||w.takeaways||w.flag||w.references;
+  return (
+    <div className="fin" style={{background:C.bg1,border:`1px solid ${open?C.b+"66":C.border}`,
+      borderRadius:8,overflow:"hidden",transition:"border .2s"}}>
+
+      {/* ── Header row (always visible) ── */}
+      <div onClick={()=>hasContent&&setOpen(o=>!o)}
+        style={{padding:"18px 20px",cursor:hasContent?"pointer":"default"}}>
+        <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-start",marginBottom:8}}>
+          <div style={{flex:1,minWidth:180}}>
+            <div style={{fontFamily:"Orbitron",fontSize:12,color:"#fff",fontWeight:700,marginBottom:3}}>{w.title}</div>
+            <div style={{fontSize:10,color:C.muted}}>{w.category}</div>
+          </div>
+          <div style={{display:"flex",gap:7,flexShrink:0,alignItems:"center"}}>
+            <Tag c={C.b}>{w.category.split(" ")[0]}</Tag>
+            <Tag c={DIFF_COLOR[w.difficulty]}>{w.difficulty}</Tag>
+            {hasContent&&(
+              <div style={{width:20,height:20,borderRadius:"50%",background:C.b+"18",
+                border:`1px solid ${C.b}44`,display:"flex",alignItems:"center",
+                justifyContent:"center",fontSize:10,color:C.b,flexShrink:0}}>
+                {open?"▴":"▾"}
+              </div>
+            )}
+          </div>
+        </div>
+        <p style={{fontSize:12,color:"#556677",lineHeight:1.7,marginBottom:12}}>{w.summary}</p>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
+          {w.tags.map(t=><Tag key={t} c="#5a5aaa">#{t}</Tag>)}
+          <span style={{marginLeft:"auto",fontSize:9,color:C.dim}}>
+            {new Date(w.date).toLocaleDateString("en-US",{year:"numeric",month:"short",day:"numeric"})}
+          </span>
+        </div>
+      </div>
+
+      {/* ── Expanded content ── */}
+      {open&&(
+        <div style={{borderTop:`1px solid ${C.border}`,padding:"20px 20px 24px",
+          display:"flex",flexDirection:"column",gap:22}}>
+
+          {/* Tools */}
+          {w.tools&&w.tools.length>0&&(
+            <div>
+              <div style={{fontSize:9,color:C.b,letterSpacing:2,marginBottom:10,
+                display:"flex",alignItems:"center",gap:8}}>
+                🛠️ TOOLS USED
+                <div style={{flex:1,height:1,background:C.b+"22"}}/>
+              </div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                {(Array.isArray(w.tools)?w.tools:w.tools.split(",").map(t=>t.trim())).map((t,i)=>(
+                  <Tag key={i} c={C.b}>{t}</Tag>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step-by-step */}
+          {w.steps&&(
+            <div>
+              <div style={{fontSize:9,color:C.g,letterSpacing:2,marginBottom:12,
+                display:"flex",alignItems:"center",gap:8}}>
+                📋 STEP-BY-STEP BREAKDOWN
+                <div style={{flex:1,height:1,background:C.g+"22"}}/>
+              </div>
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {w.steps.split("\n").filter(s=>s.trim()).map((step,i)=>(
+                  <div key={i} style={{display:"flex",gap:12,alignItems:"flex-start"}}>
+                    <div style={{width:22,height:22,borderRadius:"50%",background:C.g+"18",
+                      border:`1px solid ${C.g}44`,display:"flex",alignItems:"center",
+                      justifyContent:"center",fontSize:9,color:C.g,flexShrink:0,marginTop:1}}>
+                      {i+1}
+                    </div>
+                    <div style={{fontSize:12,color:C.text,lineHeight:1.7,paddingTop:2}}>
+                      {step.replace(/^\d+\.\s*/,"")}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Full writeup */}
+          {w.content&&(
+            <div>
+              <div style={{fontSize:9,color:C.p,letterSpacing:2,marginBottom:10,
+                display:"flex",alignItems:"center",gap:8}}>
+                📄 FULL WRITEUP
+                <div style={{flex:1,height:1,background:C.p+"22"}}/>
+              </div>
+              <div style={{background:C.bg2,border:`1px solid ${C.border}`,borderRadius:6,
+                padding:"14px 16px",fontSize:12,color:"#667788",lineHeight:1.9,
+                whiteSpace:"pre-wrap",fontFamily:"monospace"}}>
+                {w.content}
+              </div>
+            </div>
+          )}
+
+          {/* Key takeaways */}
+          {w.takeaways&&(
+            <div>
+              <div style={{fontSize:9,color:"#f59e0b",letterSpacing:2,marginBottom:10,
+                display:"flex",alignItems:"center",gap:8}}>
+                💡 KEY TAKEAWAYS
+                <div style={{flex:1,height:1,background:"#f59e0b22"}}/>
+              </div>
+              <div style={{background:"#f59e0b08",border:`1px solid #f59e0b22`,
+                borderRadius:6,padding:"12px 16px",fontSize:12,color:"#a08060",lineHeight:1.8}}>
+                {w.takeaways}
+              </div>
+            </div>
+          )}
+
+          {/* Screenshots */}
+          <div>
+            <div style={{fontSize:9,color:C.muted,letterSpacing:2,marginBottom:10,
+              display:"flex",alignItems:"center",gap:8}}>
+              🖼️ SCREENSHOTS
+              <div style={{flex:1,height:1,background:C.border}}/>
+            </div>
+            {w.screenshots?(
+              <div style={{fontSize:11,color:C.muted}}>{w.screenshots}</div>
+            ):(
+              <div style={{background:C.bg2,border:`1px dashed ${C.border}`,borderRadius:6,
+                padding:"24px",textAlign:"center",fontSize:11,color:C.dim}}>
+                No screenshots added yet — add them from the admin dashboard
+              </div>
+            )}
+          </div>
+
+          {/* Flag */}
+          {w.flag&&(
+            <div>
+              <div style={{fontSize:9,color:C.g,letterSpacing:2,marginBottom:10,
+                display:"flex",alignItems:"center",gap:8}}>
+                🚩 FLAG
+                <div style={{flex:1,height:1,background:C.g+"22"}}/>
+              </div>
+              <div style={{background:"#0a1a0a",border:`1px solid ${C.g}33`,
+                borderRadius:6,padding:"10px 16px",fontFamily:"monospace",
+                fontSize:12,color:C.g,letterSpacing:.5}}>
+                {w.flag}
+              </div>
+            </div>
+          )}
+
+          {/* References */}
+          {w.references&&(
+            <div>
+              <div style={{fontSize:9,color:C.muted,letterSpacing:2,marginBottom:10,
+                display:"flex",alignItems:"center",gap:8}}>
+                🔗 REFERENCES
+                <div style={{flex:1,height:1,background:C.border}}/>
+              </div>
+              <div style={{display:"flex",flexDirection:"column",gap:5}}>
+                {w.references.split("\n").filter(r=>r.trim()).map((ref,i)=>(
+                  <a key={i} href={ref.trim()} target="_blank" rel="noreferrer"
+                    style={{fontSize:11,color:C.b,textDecoration:"none",
+                      display:"flex",alignItems:"center",gap:6}}
+                    onMouseEnter={e=>e.currentTarget.style.textDecoration="underline"}
+                    onMouseLeave={e=>e.currentTarget.style.textDecoration="none"}>
+                    ↗ {ref.trim()}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* External link */}
+          {w.url&&w.url!=="#"&&(
+            <div style={{paddingTop:4}}>
+              <a href={w.url} target="_blank" rel="noreferrer">
+                <Btn sm outline accent={C.b}>↗ VIEW FULL WRITEUP</Btn>
+              </a>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function WriteupsPage({data,mobile}){
   const [filter,setFilter]=useState("All");
   const [diffFilter,setDiff]=useState("All");
@@ -565,31 +775,13 @@ function WriteupsPage({data,mobile}){
         {diffs.map(d=><Chip key={d} active={diffFilter===d} onClick={()=>setDiff(d)} accent={DIFF_COLOR[d]||C.muted}>{d}</Chip>)}
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:11}}>
-        {filtered.length===0&&<div style={{color:C.dim,textAlign:"center",padding:40,border:`1px dashed ${C.border}`,borderRadius:7}}>No writeups match.</div>}
-        {filtered.map((w,i)=>(
-          <div key={w.id} className="fin" style={{background:C.bg1,border:`1px solid ${C.border}`,
-            borderRadius:8,padding:"18px 20px",cursor:"pointer",transition:"all .2s",
-            animationDelay:`${i*.06}s`}}
-            onMouseEnter={e=>{e.currentTarget.style.borderColor=C.b+"55";e.currentTarget.style.transform="translateY(-1px)";}}
-            onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.transform="none";}}>
-            <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-start",marginBottom:8}}>
-              <div style={{flex:1,minWidth:200}}>
-                <div style={{fontFamily:"Orbitron",fontSize:12,color:"#fff",fontWeight:700,marginBottom:3}}>{w.title}</div>
-                <div style={{fontSize:10,color:C.muted}}>{w.category}</div>
-              </div>
-              <div style={{display:"flex",gap:7,flexShrink:0}}>
-                <Tag c={C.b}>{w.category.split(" ")[0]}</Tag>
-                <Tag c={DIFF_COLOR[w.difficulty]}>{w.difficulty}</Tag>
-              </div>
-            </div>
-            <p style={{fontSize:12,color:"#556677",lineHeight:1.7,marginBottom:12}}>{w.summary}</p>
-            <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
-              {w.tags.map(t=><Tag key={t} c="#5a5aaa">#{t}</Tag>)}
-              <span style={{marginLeft:"auto",fontSize:9,color:C.dim}}>
-                {new Date(w.date).toLocaleDateString("en-US",{year:"numeric",month:"short",day:"numeric"})}
-              </span>
-            </div>
+        {filtered.length===0&&(
+          <div style={{color:C.dim,textAlign:"center",padding:40,border:`1px dashed ${C.border}`,borderRadius:7}}>
+            No writeups match.
           </div>
+        )}
+        {filtered.map((w,i)=>(
+          <WriteupCard key={w.id} w={w} mobile={mobile}/>
         ))}
       </div>
     </div>
@@ -1103,29 +1295,97 @@ function AProjects({data,update,mobile}){
 // ── Writeups ──────────────────────────────────────────────────────────────────
 function AWriteups({data,update,mobile}){
   const [adding,setAdding]=useState(false);
+  const [editing,setEditing]=useState(null);
+
   const fields=[
     {key:"title",     label:"TITLE",full:true, placeholder:"HTB — Challenge Name"},
-    {key:"summary",   label:"SUMMARY",type:"textarea",full:true},
+    {key:"summary",   label:"SUMMARY",type:"textarea",full:true,placeholder:"Brief overview of the challenge..."},
     {key:"category",  label:"CATEGORY",type:"select",opts:CATS.slice(0,5)},
     {key:"difficulty",label:"DIFFICULTY",type:"select",opts:["Easy","Medium","Hard","Insane"]},
-    {key:"url",       label:"URL (optional)"},
-    {key:"tags",      label:"TAGS (comma separated)", placeholder:"rop, anti-debug, PE"},
+    {key:"tools",     label:"TOOLS USED (comma separated)",full:true,placeholder:"x64dbg, Ghidra, pwntools"},
+    {key:"steps",     label:"STEP-BY-STEP (one step per line)",type:"textarea",full:true,placeholder:"1. Load binary in Ghidra\n2. Find main function\n3. ..."},
+    {key:"content",   label:"FULL WRITEUP (markdown)",type:"textarea",full:true,placeholder:"Detailed writeup goes here..."},
+    {key:"takeaways", label:"KEY TAKEAWAYS",type:"textarea",full:true,placeholder:"What did you learn? What technique was key?"},
+    {key:"flag",      label:"FLAG",full:true,placeholder:"HTB{s0m3_fl4g_h3r3}"},
+    {key:"references",label:"REFERENCES (one URL per line)",type:"textarea",full:true,placeholder:"https://github.com/...\nhttps://..."},
+    {key:"url",       label:"EXTERNAL WRITEUP URL (optional)",placeholder:"https://..."},
+    {key:"tags",      label:"TAGS (comma separated)",placeholder:"rop, anti-debug, PE"},
   ];
+
   const add=(v)=>{
-    update(d=>({...d,writeups:[{...v,id:Date.now(),date:new Date().toISOString().split("T")[0],tags:v.tags.split(",").map(t=>t.trim()).filter(Boolean)},...d.writeups]}));
+    const toolsArr=v.tools?v.tools.split(",").map(t=>t.trim()).filter(Boolean):[];
+    const tagsArr=v.tags?v.tags.split(",").map(t=>t.trim()).filter(Boolean):[];
+    update(d=>({...d,writeups:[{...v,id:Date.now(),
+      date:new Date().toISOString().split("T")[0],
+      tools:toolsArr, tags:tagsArr,
+    },...d.writeups]}));
     setAdding(false);
   };
+
+  const save=(id,v)=>{
+    const toolsArr=Array.isArray(v.tools)?v.tools:v.tools?.split(",").map(t=>t.trim()).filter(Boolean)||[];
+    const tagsArr=Array.isArray(v.tags)?v.tags:v.tags?.split(",").map(t=>t.trim()).filter(Boolean)||[];
+    update(d=>({...d,writeups:d.writeups.map(w=>w.id!==id?w:{...w,...v,tools:toolsArr,tags:tagsArr})}));
+    setEditing(null);
+  };
+
   const del=(id)=>update(d=>({...d,writeups:d.writeups.filter(w=>w.id!==id)}));
+
   return (
     <div>
       <ATitleBar label="WRITEUPS">
-        <Btn sm accent={C.b} onClick={()=>setAdding(true)}>+ ADD</Btn>
+        <Btn sm accent={C.b} onClick={()=>{setAdding(true);setEditing(null);}}>+ ADD</Btn>
       </ATitleBar>
-      {adding&&<AForm fields={fields} onSave={add} onCancel={()=>setAdding(false)} mobile={mobile}/>}
-      <AList items={data.writeups} renderRow={(w)=>(
-        <ARow key={w.id} title={w.title} sub={`${w.category} · ${w.date}`}
-          tags={[w.difficulty]} accent={DIFF_COLOR[w.difficulty]} onDelete={()=>del(w.id)}/>
-      )}/>
+
+      {adding&&(
+        <AForm fields={fields} onSave={add} onCancel={()=>setAdding(false)} mobile={mobile}/>
+      )}
+
+      <div style={{display:"flex",flexDirection:"column",gap:9}}>
+        {!data.writeups.length&&(
+          <div style={{color:C.dim,textAlign:"center",padding:"28px 0",
+            border:`1px dashed ${C.border}`,borderRadius:7,fontSize:11}}>
+            Nothing here yet.
+          </div>
+        )}
+        {data.writeups.map((w)=>(
+          <div key={w.id}>
+            {editing===w.id?(
+              <AForm
+                fields={fields}
+                initial={{...w,
+                  tools:Array.isArray(w.tools)?w.tools.join(", "):w.tools||"",
+                  tags:Array.isArray(w.tags)?w.tags.join(", "):w.tags||"",
+                }}
+                onSave={(v)=>save(w.id,v)}
+                onCancel={()=>setEditing(null)}
+                mobile={mobile}/>
+            ):(
+              <div style={{background:C.bg2,border:`1px solid ${C.border}`,borderRadius:6,
+                padding:"11px 14px"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10,flexWrap:"wrap"}}>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:12,color:"#fff",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{w.title}</div>
+                    <div style={{fontSize:10,color:C.muted,marginTop:2}}>{w.category} · {w.date}</div>
+                    <div style={{display:"flex",gap:5,marginTop:6,flexWrap:"wrap"}}>
+                      <Tag c={DIFF_COLOR[w.difficulty]}>{w.difficulty}</Tag>
+                      {w.flag&&<Tag c={C.g}>🚩 Flag set</Tag>}
+                      {w.steps&&<Tag c={C.b}>📋 Steps</Tag>}
+                      {w.takeaways&&<Tag c="#f59e0b">💡 Takeaways</Tag>}
+                      {(Array.isArray(w.tools)?w.tools:w.tools?.split(","))?.filter(Boolean).length>0&&
+                        <Tag c={C.b}>🛠️ {(Array.isArray(w.tools)?w.tools:w.tools?.split(",")).filter(Boolean).length} tools</Tag>}
+                    </div>
+                  </div>
+                  <div style={{display:"flex",gap:7,flexShrink:0}}>
+                    <Btn sm outline accent={C.b} onClick={()=>setEditing(w.id)}>EDIT</Btn>
+                    <Btn sm outline accent={C.r} onClick={()=>del(w.id)}>DEL</Btn>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
