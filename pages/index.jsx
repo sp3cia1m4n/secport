@@ -101,7 +101,7 @@ const SEED = {
   ],
   certs: [
     {id:1,name:"eJPTv2",issuer:"eLearnSecurity",date:"2024",status:"Earned",color:"#22c55e",
-      logoUrl:"https://assets.ine.com/certifications/badges/eJPTv2.png",
+      proofUrl:"https://verified.elearnsecurity.com/certificates/verify/your-cert-id",
       difficulty:"Beginner",difficultyNote:"Very approachable for first cert. More about methodology than deep technical knowledge.",
       review:"Great starting point. The exam is fully hands-on — a real network with real machines. If you've done any TryHackMe or basic Metasploit you'll be fine. I passed on my first attempt with 3 hours to spare.",
       studyResources:"INE free starter path, TryHackMe Pre-Security + Jr Pentester paths, TCM Security free YouTube course",
@@ -110,6 +110,7 @@ const SEED = {
     },
     {id:2,name:"PNPT",issuer:"TCM Security",date:"2025",status:"In Progress",color:"#f59e0b",
       logoUrl:"https://images.credly.com/images/6a32d8e8-33aa-419c-b7e7-6deb2d88d7b4/image.png",
+      proofUrl:"",
       difficulty:"Intermediate",difficultyNote:"Noticeably harder than eJPT. Requires real AD attack chains end-to-end.",
       review:"Currently studying. The TCM course content is excellent — very practical. Active Directory attacks (Kerberoasting, Pass-the-Hash, BloodHound) are the core focus.",
       studyResources:"TCM Security PEH course, HackTheBox Pro Labs: Offshore, TryHackMe AD rooms, The Hacker Recipes",
@@ -145,6 +146,42 @@ const SEED = {
   // Tracker data
   entries: [],
   quizzes: [],
+  education: [
+    {
+      id:1,
+      degree:"Diploma in Cybersecurity",
+      institution:"Your Institution",
+      type:"Diploma",
+      status:"Completed",
+      startYear:"2022",
+      endYear:"2024",
+      gpa:"",
+      courses:"Network Security, Ethical Hacking, Digital Forensics, Cryptography, Incident Response",
+      projects:"Final project: Network vulnerability assessment and penetration testing report on a simulated enterprise environment.",
+      clubs:"",
+      color:"#22c55e",
+    },
+    {
+      id:2,
+      degree:"Bachelor of Science in Computer Science",
+      institution:"Your University",
+      type:"Bachelor's Degree",
+      status:"In Progress",
+      startYear:"2024",
+      endYear:"2027",
+      gpa:"",
+      courses:"Data Structures, Algorithms, Operating Systems, Computer Architecture, Software Engineering",
+      projects:"",
+      clubs:"",
+      color:"#f59e0b",
+    },
+  ],
+  todos: [
+    {id:1, text:"Complete PNPT exam preparation", done:false, priority:"High"},
+    {id:2, text:"Publish HTB writeup for HardwareHack", done:false, priority:"Medium"},
+    {id:3, text:"Build YARA rule generator tool", done:false, priority:"Medium"},
+    {id:4, text:"Finish eJPTv2 study notes", done:true, priority:"Low"},
+  ],
 };
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
@@ -159,7 +196,7 @@ const C = {
   bg:"#0e0e1a", bg1:"#14141f", bg2:"#1a1a28",
   border:"#242438", border2:"#2a2a40",
   g:"#00ff88", b:"#00ccff", o:"#ff6b35", r:"#ff3355", p:"#a855f7",
-  text:"#c8d0dc", muted:"#445566", dim:"#252535",
+  text:"#dde4ee", muted:"#7a8fa8", dim:"#3a4a5a",
 };
 
 // ─── REUSABLE UI ──────────────────────────────────────────────────────────────
@@ -466,7 +503,7 @@ function HomePage({data,setPage,mobile,tablet}){
           <span>{typed}</span>
           <span style={{animation:"blink 1s infinite",color:C.g}}>█</span>
         </div>
-        <p style={{fontSize:mobile?12:13,color:"#667788",maxWidth:540,lineHeight:1.9,marginBottom:36}}>
+        <p style={{fontSize:mobile?12:13,color:"#8faabb",maxWidth:540,lineHeight:1.9,marginBottom:36}}>
           {data.about.bio}
         </p>
         <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
@@ -538,6 +575,29 @@ function HomePage({data,setPage,mobile,tablet}){
           })}
         </div>
       </div>
+
+      {/* What I'm working on — public todos */}
+      {data.todos&&data.todos.filter(t=>!t.done).length>0&&(
+        <div className="fin" style={{marginTop:mobile?48:72}}>
+          <SLabel accent={C.o}>WHAT I'M WORKING ON</SLabel>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {data.todos.filter(t=>!t.done).map((todo,i)=>{
+              const PC={"High":C.r,"Medium":C.o,"Low":C.muted};
+              return (
+                <div key={todo.id} style={{display:"flex",gap:12,alignItems:"center",
+                  background:C.bg1,border:`1px solid ${C.border}`,
+                  borderRadius:6,padding:"11px 14px"}}>
+                  <div style={{width:8,height:8,borderRadius:"50%",flexShrink:0,
+                    background:PC[todo.priority]||C.muted,
+                    boxShadow:`0 0 6px ${PC[todo.priority]||C.muted}`}}/>
+                  <span style={{fontSize:12,color:C.text,flex:1}}>{todo.text}</span>
+                  <Tag c={PC[todo.priority]||C.muted}>{todo.priority}</Tag>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -574,7 +634,7 @@ function AboutPage({data,mobile}){
         <div>
           <h2 style={{fontFamily:"Orbitron",fontSize:mobile?20:26,color:"#fff",marginBottom:6,fontWeight:800}}>{a.name}</h2>
           <div style={{fontSize:12,color:C.g,marginBottom:22,letterSpacing:.5}}>{a.title}</div>
-          <p style={{fontSize:13,color:"#667788",lineHeight:1.9,marginBottom:28}}>{a.bio}</p>
+          <p style={{fontSize:13,color:"#8faabb",lineHeight:1.9,marginBottom:28}}>{a.bio}</p>
 
           <div style={{fontSize:9,color:C.muted,letterSpacing:2,marginBottom:12}}>FOCUS AREAS</div>
           <div style={{display:"flex",flexWrap:"wrap",gap:7,marginBottom:24}}>
@@ -587,6 +647,69 @@ function AboutPage({data,mobile}){
           </div>
         </div>
       </div>
+
+      {/* Education */}
+      {data.education&&data.education.length>0&&(
+        <div style={{marginTop:48}}>
+          <SLabel accent={C.b}>EDUCATION</SLabel>
+          <div style={{display:"flex",flexDirection:"column",gap:14}}>
+            {data.education.map((edu,i)=>{
+              const STATUS_C={"Completed":C.g,"In Progress":C.o,"Planned":"#6a7aaa"};
+              return (
+                <div key={edu.id} style={{background:C.bg1,border:`1px solid ${edu.color||C.border}33`,
+                  borderRadius:8,overflow:"hidden"}}>
+                  {/* Header */}
+                  <div style={{padding:"18px 20px",borderLeft:`3px solid ${edu.color||C.g}`}}>
+                    <div style={{display:"flex",justifyContent:"space-between",
+                      alignItems:"flex-start",gap:12,flexWrap:"wrap",marginBottom:8}}>
+                      <div style={{flex:1}}>
+                        <div style={{fontFamily:"Orbitron",fontSize:13,color:"#fff",
+                          fontWeight:800,marginBottom:4}}>{edu.degree}</div>
+                        <div style={{fontSize:12,color:edu.color||C.g,marginBottom:6}}>
+                          🎓 {edu.institution}
+                        </div>
+                        <div style={{display:"flex",gap:7,flexWrap:"wrap",alignItems:"center"}}>
+                          <Tag c={STATUS_C[edu.status]||C.g}>{edu.status}</Tag>
+                          <Tag c={C.b}>{edu.type}</Tag>
+                          <span style={{fontSize:10,color:C.muted}}>
+                            {edu.startYear} — {edu.endYear||"Present"}
+                          </span>
+                          {edu.gpa&&<Tag c="#f59e0b">GPA: {edu.gpa}</Tag>}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Courses */}
+                    {edu.courses&&(
+                      <div style={{marginTop:12}}>
+                        <div style={{fontSize:9,color:C.muted,letterSpacing:1.5,marginBottom:7}}>
+                          KEY COURSES
+                        </div>
+                        <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                          {edu.courses.split(",").map(c=>c.trim()).filter(Boolean).map((course,j)=>(
+                            <Tag key={j} c={C.b}>{course}</Tag>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Projects / thesis */}
+                    {edu.projects&&(
+                      <div style={{marginTop:12,background:C.bg2,border:`1px solid ${C.border}`,
+                        borderRadius:6,padding:"10px 14px"}}>
+                        <div style={{fontSize:9,color:C.p,letterSpacing:1.5,marginBottom:5}}>
+                          📋 PROJECTS / THESIS
+                        </div>
+                        <div style={{fontSize:12,color:"#99aabb",lineHeight:1.75}}>{edu.projects}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -612,7 +735,7 @@ function ProjectCard({p,mobile}){
           {p.category}{p.featured&&" ★"}
         </div>
         <div style={{fontSize:14,color:"#fff",fontWeight:700,marginBottom:8,paddingRight:80}}>{p.title}</div>
-        <p style={{fontSize:12,color:"#667788",lineHeight:1.75,marginBottom:14}}>{p.desc}</p>
+        <p style={{fontSize:12,color:"#8faabb",lineHeight:1.75,marginBottom:14}}>{p.desc}</p>
         <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:14}}>
           {(Array.isArray(p.tech)?p.tech:p.tech?.split(",").map(t=>t.trim())||[]).map(t=>(
             <Tag key={t} c={C.b}>{t}</Tag>
@@ -659,7 +782,7 @@ function ProjectCard({p,mobile}){
                 📌 FULL DESCRIPTION
                 <div style={{flex:1,height:1,background:C.g+"22"}}/>
               </div>
-              <p style={{fontSize:13,color:"#7a8899",lineHeight:1.9}}>{p.fullDesc}</p>
+              <p style={{fontSize:13,color:"#99aabb",lineHeight:1.9}}>{p.fullDesc}</p>
             </div>
           )}
 
@@ -821,7 +944,7 @@ function WriteupCard({w,mobile}){
             )}
           </div>
         </div>
-        <p style={{fontSize:12,color:"#556677",lineHeight:1.7,marginBottom:12}}>{w.summary}</p>
+        <p style={{fontSize:12,color:"#8899aa",lineHeight:1.7,marginBottom:12}}>{w.summary}</p>
         <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
           {w.tags.map(t=><Tag key={t} c="#5a5aaa">#{t}</Tag>)}
           <span style={{marginLeft:"auto",fontSize:9,color:C.dim}}>
@@ -885,7 +1008,7 @@ function WriteupCard({w,mobile}){
                 <div style={{flex:1,height:1,background:C.p+"22"}}/>
               </div>
               <div style={{background:C.bg2,border:`1px solid ${C.border}`,borderRadius:6,
-                padding:"14px 16px",fontSize:12,color:"#667788",lineHeight:1.9,
+                padding:"14px 16px",fontSize:12,color:"#8faabb",lineHeight:1.9,
                 whiteSpace:"pre-wrap",fontFamily:"monospace"}}>
                 {w.content}
               </div>
@@ -1112,7 +1235,7 @@ function BlogPage({data,mobile}){
         <span style={{fontSize:10,color:C.dim,marginLeft:"auto"}}>{new Date(sel.date).toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"})}</span>
       </div>
       <div style={{background:C.bg1,border:`1px solid ${C.border}`,borderRadius:8,padding:24,
-        fontSize:13,color:"#667788",lineHeight:1.9}}>
+        fontSize:13,color:"#8faabb",lineHeight:1.9}}>
         <p>{sel.excerpt}</p>
         <br/>
         <p style={{color:C.muted,fontSize:11,fontStyle:"italic"}}>
@@ -1142,7 +1265,7 @@ function BlogPage({data,mobile}){
                 <span style={{fontSize:10,color:C.dim}}>{new Date(p.date).toLocaleDateString("en-US",{month:"short",year:"numeric"})}</span>
               </div>
             </div>
-            <p style={{fontSize:12,color:"#556677",lineHeight:1.7,marginBottom:12}}>{p.excerpt}</p>
+            <p style={{fontSize:12,color:"#8899aa",lineHeight:1.7,marginBottom:12}}>{p.excerpt}</p>
             <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
               {p.tags.map(t=><Tag key={t} c="#5a5aaa">#{t}</Tag>)}
             </div>
@@ -1158,7 +1281,7 @@ function BlogPage({data,mobile}){
 // ═══════════════════════════════════════════════════════════════════════════════
 function CertCard({c,mobile}){
   const [open,setOpen]=useState(false);
-  const hasContent=c.review||c.studyResources||c.writeup;
+  const hasContent=c.review||c.studyResources||c.writeup||c.proofUrl;
   const DIFF_C={"Beginner":"#22c55e","Intermediate":"#f59e0b","Intermediate-Advanced":"#f97316","Advanced":"#ef4444","Expert":"#a855f7"};
   return (
     <div style={{border:`1px solid ${open?c.color+"66":C.border}`,borderRadius:8,
@@ -1217,7 +1340,7 @@ function CertCard({c,mobile}){
                 💬 MY REVIEW
                 <div style={{flex:1,height:1,background:c.color+"22"}}/>
               </div>
-              <p style={{fontSize:12,color:"#7a8899",lineHeight:1.85}}>{c.review}</p>
+              <p style={{fontSize:12,color:"#99aabb",lineHeight:1.85}}>{c.review}</p>
             </div>
           )}
 
@@ -1230,7 +1353,7 @@ function CertCard({c,mobile}){
                 <div style={{flex:1,height:1,background:C.b+"22"}}/>
               </div>
               <div style={{background:C.bg2,border:`1px solid ${C.border}`,borderRadius:6,
-                padding:"12px 14px",fontSize:12,color:"#7a8899",lineHeight:1.8}}>
+                padding:"12px 14px",fontSize:12,color:"#99aabb",lineHeight:1.8}}>
                 {c.studyResources}
               </div>
             </div>
@@ -1253,9 +1376,31 @@ function CertCard({c,mobile}){
                 <div style={{flex:1,height:1,background:C.p+"22"}}/>
               </div>
               <div style={{background:C.bg2,border:`1px solid ${C.border}`,borderRadius:6,
-                padding:"14px 16px",fontSize:12,color:"#7a8899",lineHeight:1.85,whiteSpace:"pre-wrap"}}>
+                padding:"14px 16px",fontSize:12,color:"#99aabb",lineHeight:1.85,whiteSpace:"pre-wrap"}}>
                 {c.writeup}
               </div>
+            </div>
+          )}
+
+          {/* Certificate proof */}
+          {c.proofUrl&&(
+            <div>
+              <div style={{fontSize:9,color:C.g,letterSpacing:2,marginBottom:10,
+                display:"flex",alignItems:"center",gap:8}}>
+                🎓 CERTIFICATE PROOF
+                <div style={{flex:1,height:1,background:C.g+"22"}}/>
+              </div>
+              {/* Image preview */}
+              <div style={{background:C.bg2,border:`1px solid ${C.g}22`,borderRadius:8,
+                overflow:"hidden",marginBottom:10,maxHeight:200,display:"flex",
+                alignItems:"center",justifyContent:"center"}}>
+                <img src={c.proofUrl} alt={`${c.name} certificate`}
+                  style={{width:"100%",maxHeight:200,objectFit:"contain"}}
+                  onError={e=>{e.target.parentNode.innerHTML=`<div style="padding:20px;color:#445566;font-size:11px;text-align:center">Preview not available for this URL</div>`;}}/>
+              </div>
+              <a href={c.proofUrl} target="_blank" rel="noreferrer">
+                <Btn sm accent={C.g} full>🎓 VIEW CERTIFICATE →</Btn>
+              </a>
             </div>
           )}
         </div>
@@ -1366,7 +1511,7 @@ function ContactPage({data,mobile}){
       <div style={{display:"grid",gridTemplateColumns:mobile?"1fr":"1fr 1fr",gap:24}}>
         {/* Info */}
         <div>
-          <p style={{fontSize:13,color:"#667788",lineHeight:1.9,marginBottom:28}}>
+          <p style={{fontSize:13,color:"#8faabb",lineHeight:1.9,marginBottom:28}}>
             Interested in collaboration, have a security question, or want to discuss a project? I'm always open to connect with fellow researchers and learners.
           </p>
           <div style={{display:"flex",flexDirection:"column",gap:9}}>
@@ -1474,8 +1619,10 @@ function AdminDashboard({data,update,mobile,tablet}){
     {id:"writeups",  label:"WRITEUPS",   icon:"📄", accent:C.b},
     {id:"blog",      label:"BLOG",       icon:"📝", accent:C.p},
     {id:"certs",     label:"CERTS",      icon:"🏆", accent:"#f59e0b"},
+    {id:"education", label:"EDUCATION",  icon:"🎓", accent:C.b},
     {id:"about",     label:"ABOUT",      icon:"👤", accent:C.muted},
     {id:"stats",     label:"STATS",      icon:"📊", accent:C.o},
+    {id:"todos",     label:"TODOS",      icon:"✅", accent:C.o},
     {id:"messages",  label:"MESSAGES",   icon:"✉️", accent:C.b},
     {id:"tracker",   label:"TRACKER",    icon:"🧠", accent:C.g},
     {id:"skillmap",  label:"SKILL MAP",  icon:"⚙️", accent:C.o},
@@ -1523,8 +1670,10 @@ function AdminDashboard({data,update,mobile,tablet}){
         {section==="writeups"  && <AWriteups  data={data} update={update} mobile={mobile}/>}
         {section==="blog"      && <ABlog      data={data} update={update} mobile={mobile}/>}
         {section==="certs"     && <ACerts     data={data} update={update} mobile={mobile}/>}
+        {section==="education" && <AEducation data={data} update={update} mobile={mobile}/>}
         {section==="about"     && <AAbout     data={data} update={update} mobile={mobile}/>}
         {section==="stats"     && <AStats     data={data} update={update} mobile={mobile}/>}
+        {section==="todos"     && <ATodos     data={data} update={update} mobile={mobile}/>}
         {section==="messages"  && <AMessages  mobile={mobile}/>}
         {section==="tracker"   && <ATracker   data={data} update={update} mobile={mobile}/>}
         {section==="skillmap"  && <ASkillMap  data={data} update={update} mobile={mobile}/>}
@@ -1860,6 +2009,7 @@ function ACerts({data,update,mobile}){
     {key:"status",       label:"STATUS",      type:"select",opts:["Earned","In Progress","Planned"]},
     {key:"difficulty",   label:"DIFFICULTY",  type:"select",opts:["Beginner","Intermediate","Intermediate-Advanced","Advanced","Expert"]},
     {key:"logoUrl",      label:"LOGO IMAGE URL",        placeholder:"https://example.com/badge.png",full:true},
+    {key:"proofUrl",     label:"CERTIFICATE PROOF URL", placeholder:"https://verified.credly.com/...",full:true},
     {key:"difficultyNote",label:"DIFFICULTY NOTE",      type:"textarea",full:true,placeholder:"How hard was it really?"},
     {key:"review",       label:"MY REVIEW",             type:"textarea",full:true,placeholder:"Your honest thoughts about the cert..."},
     {key:"studyResources",label:"STUDY RESOURCES",      type:"textarea",full:true,placeholder:"Courses, platforms, books you used..."},
@@ -1955,6 +2105,190 @@ function AAbout({data,update,mobile}){
         </div>
         <Btn sm onClick={save}>SAVE CHANGES</Btn>
       </Card>
+    </div>
+  );
+}
+
+          </div>
+        </div>
+        <Btn sm onClick={save}>SAVE CHANGES</Btn>
+      </Card>
+    </div>
+  );
+}
+
+// ── Education editor ──────────────────────────────────────────────────────────
+function AEducation({data,update,mobile}){
+  const [adding,setAdding]=useState(false);
+  const [editing,setEditing]=useState(null);
+  const STATUS_COLORS={"Completed":C.g,"In Progress":C.o,"Planned":"#6a7aaa"};
+  const fields=[
+    {key:"degree",      label:"DEGREE / DIPLOMA NAME",  full:true, placeholder:"Bachelor of Science in Computer Science"},
+    {key:"institution", label:"INSTITUTION",             full:true, placeholder:"Your University"},
+    {key:"type",        label:"TYPE", type:"select", opts:["Bachelor's Degree","Master's Degree","Diploma","Certificate","Associate Degree","PhD","Other"]},
+    {key:"status",      label:"STATUS", type:"select", opts:["Completed","In Progress","Planned"]},
+    {key:"startYear",   label:"START YEAR",   placeholder:"2022"},
+    {key:"endYear",     label:"END YEAR / EXPECTED", placeholder:"2026"},
+    {key:"gpa",         label:"GPA / GRADE",  placeholder:"3.8 / 4.0"},
+    {key:"courses",     label:"RELEVANT COURSES (comma separated)", full:true, placeholder:"Network Security, Algorithms, OS..."},
+    {key:"projects",    label:"PROJECTS / THESIS", type:"textarea", full:true, placeholder:"Describe key academic projects..."},
+  ];
+  const add=(v)=>{
+    const COLORS={"Completed":C.g,"In Progress":C.o,"Planned":"#6a7aaa"};
+    update(d=>({...d,education:[...(d.education||[]),{...v,id:Date.now(),color:COLORS[v.status]||C.g}]}));
+    setAdding(false);
+  };
+  const save=(id,v)=>{
+    const COLORS={"Completed":C.g,"In Progress":C.o,"Planned":"#6a7aaa"};
+    update(d=>({...d,education:(d.education||[]).map(e=>e.id!==id?e:{...e,...v,color:COLORS[v.status]||e.color})}));
+    setEditing(null);
+  };
+  const del=(id)=>update(d=>({...d,education:(d.education||[]).filter(e=>e.id!==id)}));
+
+  return (
+    <div>
+      <ATitleBar label="EDUCATION">
+        <Btn sm accent={C.b} onClick={()=>{setAdding(true);setEditing(null);}}>+ ADD</Btn>
+      </ATitleBar>
+      {adding&&<AForm fields={fields} onSave={add} onCancel={()=>setAdding(false)} mobile={mobile}/>}
+      <div style={{display:"flex",flexDirection:"column",gap:9}}>
+        {!(data.education||[]).length&&(
+          <div style={{color:C.dim,textAlign:"center",padding:"28px 0",
+            border:`1px dashed ${C.border}`,borderRadius:7,fontSize:11}}>Nothing here yet.</div>
+        )}
+        {(data.education||[]).map(e=>(
+          <div key={e.id}>
+            {editing===e.id
+              ? <AForm fields={fields} initial={e} onSave={v=>save(e.id,v)} onCancel={()=>setEditing(null)} mobile={mobile}/>
+              : <div style={{background:C.bg2,border:`1px solid ${C.border}`,borderRadius:6,
+                  padding:"11px 14px",display:"flex",justifyContent:"space-between",
+                  alignItems:"center",gap:10,flexWrap:"wrap"}}>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:12,color:"#fff",fontWeight:600}}>{e.degree}</div>
+                    <div style={{fontSize:10,color:C.muted,marginTop:2}}>{e.institution} · {e.startYear}–{e.endYear||"Present"}</div>
+                    <div style={{display:"flex",gap:5,marginTop:5,flexWrap:"wrap"}}>
+                      <Tag c={STATUS_COLORS[e.status]||C.g}>{e.status}</Tag>
+                      <Tag c={C.b}>{e.type}</Tag>
+                      {e.gpa&&<Tag c="#f59e0b">GPA: {e.gpa}</Tag>}
+                    </div>
+                  </div>
+                  <div style={{display:"flex",gap:7}}>
+                    <Btn sm outline accent={C.b} onClick={()=>setEditing(e.id)}>EDIT</Btn>
+                    <Btn sm outline accent={C.r} onClick={()=>del(e.id)}>DEL</Btn>
+                  </div>
+                </div>
+            }
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Todos editor ──────────────────────────────────────────────────────────────
+function ATodos({data,update,mobile}){
+  const [text,setText]=useState("");
+  const [priority,setPriority]=useState("Medium");
+  const todos=data.todos||[];
+
+  const add=()=>{
+    if(!text.trim()) return;
+    update(d=>({...d,todos:[...(d.todos||[]),
+      {id:Date.now(),text:text.trim(),done:false,priority}
+    ]}));
+    setText("");
+  };
+  const toggle=(id)=>update(d=>({...d,todos:(d.todos||[]).map(t=>t.id!==id?t:{...t,done:!t.done})}));
+  const del=(id)=>update(d=>({...d,todos:(d.todos||[]).filter(t=>t.id!==id)}));
+  const setPri=(id,p)=>update(d=>({...d,todos:(d.todos||[]).map(t=>t.id!==id?t:{...t,priority:p})}));
+
+  const PC={"High":C.r,"Medium":C.o,"Low":C.muted};
+  const pending=todos.filter(t=>!t.done);
+  const done=todos.filter(t=>t.done);
+
+  return (
+    <div>
+      <ATitleBar label="TODO LIST — WHAT I'M WORKING ON"/>
+      <div style={{fontSize:10,color:C.muted,marginBottom:16}}>
+        Uncompleted items show publicly on the home page under "What I'm Working On".
+      </div>
+
+      {/* Add new */}
+      <Card style={{marginBottom:18}}>
+        <div style={{display:"flex",gap:9,alignItems:"center",flexWrap:"wrap"}}>
+          <Input value={text} onChange={e=>setText(e.target.value)}
+            placeholder="Add a new task..." onKeyDown={e=>e.key==="Enter"&&add()}
+            style={{flex:1,minWidth:180}}/>
+          <select value={priority} onChange={e=>setPriority(e.target.value)}
+            style={{background:C.bg2,border:`1px solid ${C.border2}`,color:C.text,
+              padding:"9px 12px",borderRadius:5,fontSize:12,fontFamily:"inherit"}}>
+            {["High","Medium","Low"].map(p=>(
+              <option key={p} style={{background:C.bg1}}>{p}</option>
+            ))}
+          </select>
+          <Btn sm accent={C.g} onClick={add}>+ ADD</Btn>
+        </div>
+      </Card>
+
+      {/* Pending */}
+      {pending.length>0&&(
+        <div style={{marginBottom:20}}>
+          <div style={{fontSize:9,color:C.g,letterSpacing:2,marginBottom:10}}>
+            ⏳ IN PROGRESS ({pending.length})
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:7}}>
+            {pending.map(t=>(
+              <div key={t.id} style={{background:C.bg2,border:`1px solid ${C.border}`,
+                borderRadius:6,padding:"10px 14px",display:"flex",gap:10,alignItems:"center"}}>
+                <button onClick={()=>toggle(t.id)} style={{
+                  width:18,height:18,borderRadius:4,flexShrink:0,
+                  background:"transparent",border:`2px solid ${C.g}44`,cursor:"pointer"}}>
+                </button>
+                <span style={{flex:1,fontSize:12,color:C.text}}>{t.text}</span>
+                <select value={t.priority} onChange={e=>setPri(t.id,e.target.value)}
+                  style={{background:C.bg1,border:`1px solid ${PC[t.priority]}44`,
+                    color:PC[t.priority],padding:"3px 8px",borderRadius:4,
+                    fontSize:10,fontFamily:"inherit"}}>
+                  {["High","Medium","Low"].map(p=>(
+                    <option key={p} style={{background:C.bg1,color:C.text}}>{p}</option>
+                  ))}
+                </select>
+                <Btn sm outline accent={C.r} onClick={()=>del(t.id)}>✕</Btn>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Done */}
+      {done.length>0&&(
+        <div>
+          <div style={{fontSize:9,color:C.muted,letterSpacing:2,marginBottom:10}}>
+            ✅ COMPLETED ({done.length})
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:7}}>
+            {done.map(t=>(
+              <div key={t.id} style={{background:C.bg2,border:`1px solid ${C.border}`,
+                borderRadius:6,padding:"10px 14px",display:"flex",gap:10,alignItems:"center",
+                opacity:.6}}>
+                <button onClick={()=>toggle(t.id)} style={{
+                  width:18,height:18,borderRadius:4,flexShrink:0,
+                  background:C.g+"44",border:`2px solid ${C.g}`,
+                  cursor:"pointer",color:C.g,fontSize:10}}>✓</button>
+                <span style={{flex:1,fontSize:12,color:C.muted,textDecoration:"line-through"}}>{t.text}</span>
+                <Btn sm outline accent={C.r} onClick={()=>del(t.id)}>✕</Btn>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!todos.length&&(
+        <div style={{color:C.dim,textAlign:"center",padding:"28px 0",
+          border:`1px dashed ${C.border}`,borderRadius:7,fontSize:11}}>
+          No tasks yet — add something above.
+        </div>
+      )}
     </div>
   );
 }
