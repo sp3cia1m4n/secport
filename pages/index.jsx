@@ -281,8 +281,13 @@ const Grid = ({children,cols,gap})=>(
 
 // ─── USEWIDTH ─────────────────────────────────────────────────────────────────
 function useWidth(){
-  const [w,setW]=useState(900);
-  useEffect(()=>{ const h=()=>setW(window.innerWidth); window.addEventListener("resize",h); return()=>window.removeEventListener("resize",h); },[]);
+  const [w,setW]=useState(1440);
+  useEffect(()=>{
+    setW(window.innerWidth);
+    const h=()=>setW(window.innerWidth);
+    window.addEventListener("resize",h);
+    return()=>window.removeEventListener("resize",h);
+  },[]);
   return w;
 }
 
