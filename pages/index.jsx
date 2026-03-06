@@ -323,14 +323,14 @@ function App(){
   },[persist]);
 
   const NAV=[
-    {id:"home",      label:"HOME",   icon:"◈"},
-    {id:"about",     label:"ABOUT",  icon:"👤"},
-    {id:"projects",  label:"PROJECTS",icon:"🛠️"},
+    {id:"home",      label:"HOME",    icon:"◈"},
+    {id:"about",     label:"ABOUT",   icon:"👤"},
+    {id:"certs",     label:"CERTS",   icon:"🏆"},
     {id:"writeups",  label:"WRITEUPS",icon:"📄"},
-    {id:"skills",    label:"SKILLS", icon:"⚙️"},
-    {id:"blog",      label:"BLOG",   icon:"📝"},
-    {id:"certs",     label:"CERTS",  icon:"🏆"},
-    {id:"contact",   label:"CONTACT",icon:"✉️"},
+    {id:"projects",  label:"PROJECTS",icon:"🛠️"},
+    {id:"blog",      label:"BLOG",    icon:"📝"},
+    {id:"skills",    label:"SKILLS",  icon:"⚙️"},
+    {id:"contact",   label:"CONTACT", icon:"✉️"},
   ];
 
   if(!data) return (
