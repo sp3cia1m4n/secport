@@ -2109,14 +2109,6 @@ function AAbout({data,update,mobile}){
   );
 }
 
-          </div>
-        </div>
-        <Btn sm onClick={save}>SAVE CHANGES</Btn>
-      </Card>
-    </div>
-  );
-}
-
 // ── Education editor ──────────────────────────────────────────────────────────
 function AEducation({data,update,mobile}){
   const [adding,setAdding]=useState(false);
