@@ -302,7 +302,7 @@ function App(){
   const [menuOpen,setMenu]  = useState(false);
   const [data,setData]      = useState(null);
   const width = useWidth();
-  const mobile = width<640, tablet = width<960;
+  const mobile = width<640, tablet = width<1024;
 
   // Load from storage or seed
   useEffect(()=>{
@@ -366,12 +366,14 @@ function App(){
         backdropFilter:"blur(14px)",borderBottom:`1px solid ${C.border}`,
         height:54,display:"flex",alignItems:"center",padding:`0 ${mobile?14:28}px`,gap:14}}>
 
-        <div onClick={()=>{setPage("home");setAdmin(false);}} style={{cursor:"pointer",flexShrink:0}}>
+        <div onClick={()=>{setPage("home");setAdmin(false);}} style={{cursor:"pointer",flexShrink:0,minWidth:"fit-content"}}>
           <span style={{fontFamily:"Orbitron",fontSize:mobile?11:14,color:C.g,
-            letterSpacing:2,textShadow:`0 0 14px ${C.g}77`}}>
+            letterSpacing:2,textShadow:`0 0 14px ${C.g}77`,whiteSpace:"nowrap"}}>
             &lt;<span style={{color:C.b}}>sec</span><span style={{color:C.o}}>port</span>/&gt;
           </span>
         </div>
+
+        <div style={{width:1,height:24,background:C.border,flexShrink:0}}/>
 
         {!tablet&&!adminMode&&(
           <nav style={{display:"flex",gap:1,marginLeft:8}}>
