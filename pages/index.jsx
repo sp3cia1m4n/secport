@@ -183,13 +183,13 @@ const Card = ({children,style,glow,onClick,hover})=>{
   );
 };
 
-const Input = ({value,onChange,placeholder,type,multiline,rows,style:s})=>{
+const Input = ({value,onChange,placeholder,type,multiline,rows,style:s,onKeyDown})=>{
   const base = {background:C.bg2,border:`1px solid ${C.border2}`,color:C.text,
     padding:"9px 12px",borderRadius:5,fontSize:12,fontFamily:"inherit",
     width:"100%",resize:multiline?"vertical":undefined,...s};
   return multiline
     ? <textarea value={value} onChange={onChange} placeholder={placeholder} rows={rows||3} style={base}/>
-    : <input type={type||"text"} value={value} onChange={onChange} placeholder={placeholder} style={base}/>;
+    : <input type={type||"text"} value={value} onChange={onChange} placeholder={placeholder} onKeyDown={onKeyDown} style={base}/>;
 };
 
 const Select = ({value,onChange,options})=>(
