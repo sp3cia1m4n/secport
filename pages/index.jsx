@@ -10,7 +10,9 @@ const DB = {
       const r = await fetch("/api/portfolio");
       if (!r.ok) return null;
       const d = await r.json();
-      if (d && d.error) return null;
+      if (!d || d.error) return null;
+      // Validate it looks like real portfolio data, not test/corrupt data
+      if (!d.projects || !d.writeups || !d.certs || !d.topics) return null;
       return d;
     } catch { return null; }
   },
