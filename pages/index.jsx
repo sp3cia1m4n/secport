@@ -1484,7 +1484,7 @@ function ContactPage({data,mobile}){
   // Basic email validation
   const validEmail=(e)=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
-  const submit=()=>{
+  const submit=async()=>{
     setError("");
     if(!form.name.trim())    return setError("Name is required.");
     if(!validEmail(form.email)) return setError("Enter a valid email address.");
