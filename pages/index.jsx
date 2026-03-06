@@ -1,10 +1,30 @@
 import dynamic from "next/dynamic";
 import { useState, useEffect, useCallback, useRef } from "react";
 
-// ─── PERSISTENT STORAGE ───────────────────────────────────────────────────────
+// ─── PERSISTENT STORAGE — MongoDB API ────────────────────────────────────────
 const DB = {
-  load: async (key) => { try { const r = localStorage.getItem(key); return r?JSON.parse(r):null; } catch { return null; } },
-  save: async (key,val) => { try { localStorage.setItem(key,JSON.stringify(val)); } catch {} },
+  load: async () => {
+    try {
+      const r = await fetch("/api/portfolio");
+      if (!r.ok) return null;
+      return await r.json();
+    } catch { return null; }
+  },
+  save: async (val) => {
+    try {
+      // get JWT token from cookie
+      const token = document.cookie.split(";").map(c=>c.trim())
+        .find(c=>c.startsWith("admin_token="))?.split("=")[1];
+      await fetch("/api/portfolio", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(val),
+      });
+    } catch {}
+  },
 };
 
 // ─── SEED DATA ────────────────────────────────────────────────────────────────
@@ -309,15 +329,15 @@ function App(){
   const width = useWidth();
   const mobile = width<640, tablet = width<1024;
 
-  // Load from storage or seed
+  // Load from MongoDB, fall back to seed data if empty
   useEffect(()=>{
     (async()=>{
-      const saved = await DB.load("sp_data");
+      const saved = await DB.load();
       setData(saved || JSON.parse(JSON.stringify(SEED)));
     })();
   },[]);
 
-  const persist = useCallback(async(d)=>{ await DB.save("sp_data",d); },[]);
+  const persist = useCallback(async(d)=>{ await DB.save(d); },[]);
   const update  = useCallback((updater)=>{
     setData(prev=>{ const next=updater({...prev}); persist(next); return next; });
   },[persist]);
@@ -1482,11 +1502,20 @@ function ContactPage({data,mobile}){
       read:false,
     };
 
-    // Save to localStorage messages list
+    // Send to MongoDB via API
     try {
-      const existing=JSON.parse(localStorage.getItem("sp_messages")||"[]");
-      localStorage.setItem("sp_messages",JSON.stringify([msg,...existing]));
-    } catch{}
+      const res = await fetch("/api/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(msg),
+      });
+      if (!res.ok) {
+        const e = await res.json();
+        return setError(e.error || "Failed to send. Please try again.");
+      }
+    } catch {
+      return setError("Connection error. Please try again.");
+    }
 
     setSent(true);
     setForm({name:"",email:"",subject:"",message:""});
@@ -2338,37 +2367,59 @@ function AStats({data,update,mobile}){
 
 // ── Messages inbox ────────────────────────────────────────────────────────────
 function AMessages({mobile}){
-  const [msgs,setMsgs]=useState(()=>{
-    try { return JSON.parse(localStorage.getItem("sp_messages")||"[]"); } catch { return []; }
-  });
+  const [msgs,setMsgs]=useState([]);
+  const [loading,setLoading]=useState(true);
   const [sel,setSel]=useState(null);
 
-  const markRead=(id)=>{
-    const next=msgs.map(m=>m.id!==id?m:{...m,read:true});
-    setMsgs(next);
-    localStorage.setItem("sp_messages",JSON.stringify(next));
-  };
-  const del=(id)=>{
-    const next=msgs.filter(m=>m.id!==id);
-    setMsgs(next);
-    setSel(null);
-    localStorage.setItem("sp_messages",JSON.stringify(next));
-  };
-  const unread=msgs.filter(m=>!m.read).length;
+  const getToken=()=>document.cookie.split(";").map(c=>c.trim())
+    .find(c=>c.startsWith("admin_token="))?.split("=")[1];
 
-  // Safe text display — already sanitized on save, render as text only
+  const authHeaders=()=>({
+    "Content-Type":"application/json",
+    ...(getToken()?{"Authorization":`Bearer ${getToken()}`}:{})
+  });
+
+  // Load messages from API
+  useEffect(()=>{
+    fetch("/api/messages",{headers:authHeaders()})
+      .then(r=>r.json())
+      .then(d=>{ setMsgs(Array.isArray(d)?d:[]); setLoading(false); })
+      .catch(()=>setLoading(false));
+  },[]);
+
+  const markRead=async(id)=>{
+    setMsgs(m=>m.map(x=>x._id!==id?x:{...x,read:true}));
+    await fetch("/api/messages",{
+      method:"PATCH",
+      headers:authHeaders(),
+      body:JSON.stringify({id,read:true})
+    });
+  };
+
+  const del=async(id)=>{
+    setMsgs(m=>m.filter(x=>x._id!==id));
+    setSel(null);
+    await fetch("/api/messages",{
+      method:"DELETE",
+      headers:authHeaders(),
+      body:JSON.stringify({id})
+    });
+  };
+
+  const unread=msgs.filter(m=>!m.read).length;
   const safeText=(str)=>String(str||"");
 
   return (
     <div>
       <ATitleBar label="MESSAGES INBOX">
-        <div style={{fontSize:10,color:C.muted}}>
-          {unread>0&&<Tag c={C.r}>{unread} unread</Tag>}
-          {unread===0&&<Tag c={C.g}>All read</Tag>}
+        <div style={{fontSize:10,color:C.muted,display:"flex",gap:7,alignItems:"center"}}>
+          {loading&&<span style={{color:C.muted}}>Loading...</span>}
+          {!loading&&unread>0&&<Tag c={C.r}>{unread} unread</Tag>}
+          {!loading&&unread===0&&<Tag c={C.g}>All read</Tag>}
         </div>
       </ATitleBar>
 
-      {msgs.length===0&&(
+      {!loading&&msgs.length===0&&(
         <div style={{color:C.dim,textAlign:"center",padding:"48px 0",
           border:`1px dashed ${C.border}`,borderRadius:7,fontSize:11}}>
           No messages yet. When someone submits the contact form it shows here.
@@ -2379,13 +2430,13 @@ function AMessages({mobile}){
         {/* List */}
         <div style={{display:"flex",flexDirection:"column",gap:7}}>
           {msgs.map(m=>(
-            <div key={m.id}
-              onClick={()=>{setSel(m);markRead(m.id);}}
-              style={{background:sel?.id===m.id?C.b+"12":m.read?C.bg2:C.bg1,
-                border:`1px solid ${sel?.id===m.id?C.b+"66":m.read?C.border:C.b+"33"}`,
+            <div key={m._id}
+              onClick={()=>{setSel(m);markRead(m._id);}}
+              style={{background:sel?._id===m._id?C.b+"12":m.read?C.bg2:C.bg1,
+                border:`1px solid ${sel?._id===m._id?C.b+"66":m.read?C.border:C.b+"33"}`,
                 borderRadius:6,padding:"11px 14px",cursor:"pointer",transition:"all .15s"}}>
               <div style={{display:"flex",justifyContent:"space-between",gap:8,marginBottom:4}}>
-                <div style={{fontSize:12,color:m.read?"#fff":"#fff",fontWeight:m.read?400:700,
+                <div style={{fontSize:12,color:"#fff",fontWeight:m.read?400:700,
                   overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
                   {safeText(m.name)}
                 </div>
@@ -2416,7 +2467,7 @@ function AMessages({mobile}){
                 <div style={{fontSize:11,color:C.b}}>{safeText(sel.email)}</div>
               </div>
               <div style={{display:"flex",gap:7}}>
-                <Btn sm outline accent={C.r} onClick={()=>del(sel.id)}>DELETE</Btn>
+                <Btn sm outline accent={C.r} onClick={()=>del(sel._id)}>DELETE</Btn>
                 <button onClick={()=>setSel(null)} style={{
                   background:"none",border:`1px solid ${C.border}`,color:C.muted,
                   borderRadius:4,padding:"5px 10px",fontSize:10}}>✕</button>
