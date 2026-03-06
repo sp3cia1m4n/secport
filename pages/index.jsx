@@ -7,15 +7,16 @@ const DB = {
     try {
       const r = await fetch("/api/portfolio");
       if (!r.ok) return null;
-      return await r.json();
+      const d = await r.json();
+      if (d && d.error) return null;
+      return d;
     } catch { return null; }
   },
   save: async (val) => {
     try {
-      // get JWT token from cookie
-      const token = document.cookie.split(";").map(c=>c.trim())
-        .find(c=>c.startsWith("admin_token="))?.split("=")[1];
-      await fetch("/api/portfolio", {
+      // Try httpOnly cookie first (sent automatically), then sessionStorage fallback
+      const token = sessionStorage.getItem("sp_token");
+      const res = await fetch("/api/portfolio", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -23,7 +24,8 @@ const DB = {
         },
         body: JSON.stringify(val),
       });
-    } catch {}
+      if (!res.ok) console.warn("Save failed:", res.status);
+    } catch (e) { console.warn("Save error:", e); }
   },
 };
 
@@ -1611,7 +1613,12 @@ function AdminDashboard({data,update,mobile,tablet}){
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({password:pw}),
       });
-      if(res.ok) setAuthed(true);
+      if(res.ok){
+        const d = await res.json();
+        // Store token in sessionStorage so DB.save can use it
+        if(d.token) sessionStorage.setItem("sp_token", d.token);
+        setAuthed(true);
+      }
       else setErr("Wrong password. Try again.");
     } catch {
       setErr("Connection error. Try again.");
@@ -2371,8 +2378,7 @@ function AMessages({mobile}){
   const [loading,setLoading]=useState(true);
   const [sel,setSel]=useState(null);
 
-  const getToken=()=>document.cookie.split(";").map(c=>c.trim())
-    .find(c=>c.startsWith("admin_token="))?.split("=")[1];
+  const getToken=()=>sessionStorage.getItem("sp_token");
 
   const authHeaders=()=>({
     "Content-Type":"application/json",
