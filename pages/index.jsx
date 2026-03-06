@@ -2,6 +2,8 @@ import dynamic from "next/dynamic";
 import { useState, useEffect, useCallback, useRef } from "react";
 
 // ─── PERSISTENT STORAGE — MongoDB API ────────────────────────────────────────
+const isBrowser = typeof window !== "undefined";
+
 const DB = {
   load: async () => {
     try {
@@ -14,7 +16,7 @@ const DB = {
   },
   save: async (val) => {
     try {
-      const token = localStorage.getItem("sp_token");
+      const token = isBrowser ? localStorage.getItem("sp_token") : null;
       const res = await fetch("/api/portfolio", {
         method: "POST",
         headers: {
@@ -1615,7 +1617,7 @@ function AdminDashboard({data,update,mobile,tablet}){
       if(res.ok){
         const d = await res.json();
         // Store token in sessionStorage so DB.save can use it
-        if(d.token) localStorage.setItem("sp_token", d.token);
+        if(d.token && isBrowser) localStorage.setItem("sp_token", d.token);
         setAuthed(true);
       }
       else setErr("Wrong password. Try again.");
@@ -2377,7 +2379,7 @@ function AMessages({mobile}){
   const [loading,setLoading]=useState(true);
   const [sel,setSel]=useState(null);
 
-  const getToken=()=>localStorage.getItem("sp_token");
+  const getToken=()=> isBrowser ? localStorage.getItem("sp_token") : null;
 
   const authHeaders=()=>({
     "Content-Type":"application/json",
