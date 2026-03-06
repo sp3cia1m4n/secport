@@ -523,7 +523,7 @@ function HomePage({data,setPage,mobile,tablet}){
       {/* Stat cards */}
       <div className="fin" style={{display:"grid",
         gridTemplateColumns:mobile?"repeat(2,1fr)":"repeat(3,1fr)",
-        gap:12,marginBottom:mobile?52:72}}>
+        gap:12,marginBottom:mobile?32:40}}>
         {(data.stats.customStats||[]).map(({label,value,icon},i)=>(
           <Card key={i} glow={C.g} style={{padding:mobile?"14px":"18px 22px",textAlign:"center"}}>
             <div style={{fontSize:20,marginBottom:6}}>{icon}</div>
@@ -539,18 +539,7 @@ function HomePage({data,setPage,mobile,tablet}){
         <SLabel>RECENT WRITEUPS</SLabel>
         <div style={{display:"flex",flexDirection:"column",gap:9}}>
           {data.writeups.slice(0,3).map((w,i)=>(
-            <div key={i} style={{background:C.bg1,border:`1px solid ${C.border}`,borderRadius:7,
-              padding:"13px 16px",display:"flex",gap:12,alignItems:"center",
-              cursor:"pointer",transition:"border .2s"}}
-              onMouseEnter={e=>e.currentTarget.style.borderColor=C.b+"55"}
-              onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
-              <span style={{fontSize:18,flexShrink:0}}>📄</span>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{fontSize:12,color:"#fff",fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{w.title}</div>
-                <div style={{fontSize:10,color:C.muted,marginTop:2}}>{w.category} · {new Date(w.date).toLocaleDateString("en-US",{month:"short",year:"numeric"})}</div>
-              </div>
-              <Tag c={DIFF_COLOR[w.difficulty]}>{w.difficulty}</Tag>
-            </div>
+            <WriteupCard key={w.id||i} w={w} mobile={mobile}/>
           ))}
         </div>
         <div style={{marginTop:14}}>
