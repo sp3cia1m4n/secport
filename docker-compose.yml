@@ -1,0 +1,59 @@
+version: "3.9"
+
+services:
+
+  app:
+    build: .
+    container_name: secport_app
+    restart: unless-stopped
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/secport
+      - JWT_SECRET=${JWT_SECRET}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - NEXT_PUBLIC_APP_URL=https://${DOMAIN}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - secport_net
+
+  mongo:
+    image: mongo:7
+    container_name: secport_mongo
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - secport_net
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: secport_caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+    networks:
+      - secport_net
+
+volumes:
+  mongo_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  secport_net:
+    driver: bridge
