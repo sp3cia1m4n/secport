@@ -17,7 +17,16 @@ const SEED = {
     focusAreas:["Reverse Engineering","Malware Analysis","Hardware Security","Binary Exploitation","OS Internals"],
     tools:["IDA Pro","Ghidra","x64dbg","Frida","GDB+PEDA","Wireshark","YARA","Volatility"],
   },
-  stats: { ctfs:24, writeups:18, tools:7, certs:1, streak:14, solved:89 },
+  stats: { ctfs:24, writeups:18, tools:7, certs:1, streak:14, solved:89,
+    customStats:[
+      {label:"CTFs Competed",    value:24,  icon:"🚩"},
+      {label:"Writeups Published",value:18, icon:"📄"},
+      {label:"Tools Built",      value:7,   icon:"🛠️"},
+      {label:"Challenges Solved",value:89,  icon:"✅"},
+      {label:"Certs Earned",     value:1,   icon:"🏆"},
+      {label:"Day Streak 🔥",    value:14,  icon:"📅"},
+    ]
+  },
   projects: [
     {id:1,title:"PE Analyzer",desc:"Static analysis tool for PE files — extracts imports, sections, entropy, and detects common packer signatures automatically.",
       tech:["Python","pefile","YARA"],category:"Tool",github:"#",demo:"",featured:true,
@@ -91,10 +100,32 @@ const SEED = {
     },
   ],
   certs: [
-    {id:1,name:"eJPTv2",issuer:"eLearnSecurity",date:"2024",status:"Earned",color:"#22c55e"},
-    {id:2,name:"PNPT",issuer:"TCM Security",date:"2025",status:"In Progress",color:"#f59e0b"},
-    {id:3,name:"CRTP",issuer:"Pentester Academy",date:"2025",status:"Planned",color:"#6a7aaa"},
-    {id:4,name:"OSED",issuer:"Offensive Security",date:"2026",status:"Planned",color:"#6a7aaa"},
+    {id:1,name:"eJPTv2",issuer:"eLearnSecurity",date:"2024",status:"Earned",color:"#22c55e",
+      logoUrl:"https://assets.ine.com/certifications/badges/eJPTv2.png",
+      difficulty:"Beginner",difficultyNote:"Very approachable for first cert. More about methodology than deep technical knowledge.",
+      review:"Great starting point. The exam is fully hands-on — a real network with real machines. If you've done any TryHackMe or basic Metasploit you'll be fine. I passed on my first attempt with 3 hours to spare.",
+      studyResources:"INE free starter path, TryHackMe Pre-Security + Jr Pentester paths, TCM Security free YouTube course",
+      studyTime:"6 weeks, ~2 hours/day",
+      writeup:"The exam gives you a network with several machines and you need to find specific flags. Focus on enumeration — nmap everything, use Metasploit for known CVEs, and practice pivoting. The hardest part for me was the web application portion.",
+    },
+    {id:2,name:"PNPT",issuer:"TCM Security",date:"2025",status:"In Progress",color:"#f59e0b",
+      logoUrl:"https://images.credly.com/images/6a32d8e8-33aa-419c-b7e7-6deb2d88d7b4/image.png",
+      difficulty:"Intermediate",difficultyNote:"Noticeably harder than eJPT. Requires real AD attack chains end-to-end.",
+      review:"Currently studying. The TCM course content is excellent — very practical. Active Directory attacks (Kerberoasting, Pass-the-Hash, BloodHound) are the core focus.",
+      studyResources:"TCM Security PEH course, HackTheBox Pro Labs: Offshore, TryHackMe AD rooms, The Hacker Recipes",
+      studyTime:"Ongoing — targeting Q2 2025",
+      writeup:"",
+    },
+    {id:3,name:"CRTP",issuer:"Pentester Academy",date:"2025",status:"Planned",color:"#6a7aaa",
+      logoUrl:"",
+      difficulty:"Intermediate-Advanced",difficultyNote:"Deep Active Directory focus — requires solid Windows internals knowledge first.",
+      review:"",studyResources:"",studyTime:"",writeup:"",
+    },
+    {id:4,name:"OSED",issuer:"Offensive Security",date:"2026",status:"Planned",color:"#6a7aaa",
+      logoUrl:"",
+      difficulty:"Advanced",difficultyNote:"One of the hardest OffSec certs — pure Windows exploit development.",
+      review:"",studyResources:"",studyTime:"",writeup:"",
+    },
   ],
   posts: [
     {id:1,title:"Understanding PE File Format From Scratch",category:"Malware Analysis",date:"2025-01-10",excerpt:"A deep dive into the Portable Executable format — headers, sections, import tables, and how packers abuse them.",tags:["PE","malware","windows"],readTime:8},
@@ -309,7 +340,7 @@ function App(){
           <nav style={{display:"flex",gap:1,marginLeft:8}}>
             {NAV.map(({id,label})=>(
               <button key={id} onClick={()=>setPage(id)} style={{
-                background:"none",border:"none",color:page===id?C.g:C.muted,
+                background:"none",border:"none",color:page===id?C.g:"#8899aa",
                 fontSize:9,letterSpacing:1.5,padding:"6px 10px",
                 borderBottom:page===id?`2px solid ${C.g}`:"2px solid transparent",
                 transition:"all .15s"
@@ -449,18 +480,11 @@ function HomePage({data,setPage,mobile,tablet}){
       <div className="fin" style={{display:"grid",
         gridTemplateColumns:mobile?"repeat(2,1fr)":"repeat(3,1fr)",
         gap:12,marginBottom:mobile?52:72}}>
-        {[
-          {n:data.stats.ctfs,      label:"CTFs Competed",  icon:"🚩",c:C.g},
-          {n:data.stats.writeups,  label:"Writeups",       icon:"📄",c:C.b},
-          {n:data.stats.tools,     label:"Tools Built",    icon:"🛠️",c:C.o},
-          {n:data.stats.solved,    label:"Challenges",     icon:"✅",c:C.p},
-          {n:data.stats.certs,     label:"Certs Earned",   icon:"🏆",c:"#f59e0b"},
-          {n:data.stats.streak,    label:"Day Streak 🔥",  icon:"📅",c:C.g},
-        ].map(({n,label,icon,c},i)=>(
-          <Card key={i} glow={c} style={{padding:mobile?"14px":"18px 22px",textAlign:"center"}}>
+        {(data.stats.customStats||[]).map(({label,value,icon},i)=>(
+          <Card key={i} glow={C.g} style={{padding:mobile?"14px":"18px 22px",textAlign:"center"}}>
             <div style={{fontSize:20,marginBottom:6}}>{icon}</div>
-            <div style={{fontFamily:"Orbitron",fontSize:mobile?26:34,color:c,fontWeight:900,
-              textShadow:`0 0 20px ${c}55`,lineHeight:1}}>{n}</div>
+            <div style={{fontFamily:"Orbitron",fontSize:mobile?26:34,color:C.g,fontWeight:900,
+              textShadow:`0 0 20px ${C.g}55`,lineHeight:1}}>{value}</div>
             <div style={{fontSize:9,color:C.muted,marginTop:5,letterSpacing:1}}>{label}</div>
           </Card>
         ))}
@@ -1132,46 +1156,143 @@ function BlogPage({data,mobile}){
 // ═══════════════════════════════════════════════════════════════════════════════
 //  CERTS
 // ═══════════════════════════════════════════════════════════════════════════════
+function CertCard({c,mobile}){
+  const [open,setOpen]=useState(false);
+  const hasContent=c.review||c.studyResources||c.writeup;
+  const DIFF_C={"Beginner":"#22c55e","Intermediate":"#f59e0b","Intermediate-Advanced":"#f97316","Advanced":"#ef4444","Expert":"#a855f7"};
+  return (
+    <div style={{border:`1px solid ${open?c.color+"66":C.border}`,borderRadius:8,
+      overflow:"hidden",background:C.bg1,transition:"border .2s"}}>
+      {/* Header */}
+      <div onClick={()=>hasContent&&setOpen(o=>!o)}
+        style={{padding:"20px 18px",cursor:hasContent?"pointer":"default",
+          display:"flex",gap:14,alignItems:"center"}}>
+        {/* Logo */}
+        <div style={{width:52,height:52,borderRadius:8,background:c.color+"18",
+          border:`2px solid ${c.color}33`,display:"flex",alignItems:"center",
+          justifyContent:"center",flexShrink:0,overflow:"hidden"}}>
+          {c.logoUrl
+            ? <img src={c.logoUrl} alt={c.name} style={{width:"100%",height:"100%",objectFit:"contain"}}
+                onError={e=>{e.target.style.display="none";e.target.nextSibling.style.display="flex";}}/>
+            : null}
+          <span style={{fontSize:22,display:c.logoUrl?"none":"flex"}}>🏆</span>
+        </div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontFamily:"Orbitron",fontSize:13,color:"#fff",fontWeight:800,marginBottom:3}}>{c.name}</div>
+          <div style={{fontSize:10,color:C.muted,marginBottom:6}}>{c.issuer} · {c.date}</div>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
+            <Tag c={c.color}>{c.status}</Tag>
+            {c.difficulty&&<Tag c={DIFF_C[c.difficulty]||C.muted}>{c.difficulty}</Tag>}
+          </div>
+        </div>
+        {hasContent&&(
+          <div style={{width:22,height:22,borderRadius:"50%",background:c.color+"18",
+            border:`1px solid ${c.color}44`,display:"flex",alignItems:"center",
+            justifyContent:"center",fontSize:11,color:c.color,flexShrink:0}}>
+            {open?"▴":"▾"}
+          </div>
+        )}
+      </div>
+
+      {/* Expanded */}
+      {open&&(
+        <div style={{borderTop:`1px solid ${C.border}`,padding:"18px 18px 22px",
+          display:"flex",flexDirection:"column",gap:18}}>
+
+          {/* Difficulty note */}
+          {c.difficultyNote&&(
+            <div style={{background:C.bg2,border:`1px solid ${C.border}`,borderRadius:6,
+              padding:"10px 14px",fontSize:12,color:"#8899aa",lineHeight:1.7,
+              borderLeft:`3px solid ${DIFF_C[c.difficulty]||C.muted}`}}>
+              <span style={{color:DIFF_C[c.difficulty]||C.muted,fontSize:9,letterSpacing:1.5,display:"block",marginBottom:4}}>DIFFICULTY</span>
+              {c.difficultyNote}
+            </div>
+          )}
+
+          {/* Review */}
+          {c.review&&(
+            <div>
+              <div style={{fontSize:9,color:c.color,letterSpacing:2,marginBottom:8,
+                display:"flex",alignItems:"center",gap:8}}>
+                💬 MY REVIEW
+                <div style={{flex:1,height:1,background:c.color+"22"}}/>
+              </div>
+              <p style={{fontSize:12,color:"#7a8899",lineHeight:1.85}}>{c.review}</p>
+            </div>
+          )}
+
+          {/* Study resources */}
+          {c.studyResources&&(
+            <div>
+              <div style={{fontSize:9,color:C.b,letterSpacing:2,marginBottom:8,
+                display:"flex",alignItems:"center",gap:8}}>
+                📚 STUDY RESOURCES
+                <div style={{flex:1,height:1,background:C.b+"22"}}/>
+              </div>
+              <div style={{background:C.bg2,border:`1px solid ${C.border}`,borderRadius:6,
+                padding:"12px 14px",fontSize:12,color:"#7a8899",lineHeight:1.8}}>
+                {c.studyResources}
+              </div>
+            </div>
+          )}
+
+          {/* Study time */}
+          {c.studyTime&&(
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <span style={{fontSize:9,color:C.muted,letterSpacing:1.5}}>⏱ STUDY TIME</span>
+              <Tag c="#f59e0b">{c.studyTime}</Tag>
+            </div>
+          )}
+
+          {/* Writeup */}
+          {c.writeup&&(
+            <div>
+              <div style={{fontSize:9,color:C.p,letterSpacing:2,marginBottom:8,
+                display:"flex",alignItems:"center",gap:8}}>
+                📝 EXAM WRITEUP / NOTES
+                <div style={{flex:1,height:1,background:C.p+"22"}}/>
+              </div>
+              <div style={{background:C.bg2,border:`1px solid ${C.border}`,borderRadius:6,
+                padding:"14px 16px",fontSize:12,color:"#7a8899",lineHeight:1.85,whiteSpace:"pre-wrap"}}>
+                {c.writeup}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CertsPage({data,mobile,tablet}){
-  const roadmap=[
-    {label:"eJPTv2 — Junior Penetration Tester",  done:true,  date:"2024", note:"Entry-level pen testing fundamentals"},
-    {label:"PNPT — Practical Network Pen Test",    active:true,date:"2025", note:"Real-world external/internal pen test"},
-    {label:"CRTP — Red Team Pro",                  date:"2025", note:"Active Directory attacks & defense"},
-    {label:"OSED — Exploit Developer",             date:"2026", note:"Windows exploit development"},
-    {label:"OSCP — Offensive Security CP",         date:"2026", note:"The gold standard cert"},
-  ];
   return (
     <div style={{maxWidth:1000,margin:"0 auto",padding:mobile?"32px 16px":"64px 28px"}}>
       <SLabel accent="#f59e0b">CERTIFICATIONS</SLabel>
-      <div style={{display:"grid",gridTemplateColumns:mobile?"1fr 1fr":tablet?"repeat(2,1fr)":"repeat(4,1fr)",gap:14,marginBottom:48}}>
+      <div style={{display:"grid",gridTemplateColumns:mobile?"1fr":tablet?"1fr 1fr":"1fr 1fr",gap:14,marginBottom:48}}>
         {data.certs.map((c,i)=>(
-          <Card key={i} glow={c.color} style={{textAlign:"center",padding:"24px 16px"}}>
-            <div style={{width:52,height:52,borderRadius:"50%",background:c.color+"18",
-              border:`2px solid ${c.color}44`,display:"flex",alignItems:"center",
-              justifyContent:"center",fontSize:22,margin:"0 auto 14px"}}>🏆</div>
-            <div style={{fontFamily:"Orbitron",fontSize:13,color:"#fff",fontWeight:800,marginBottom:5}}>{c.name}</div>
-            <div style={{fontSize:10,color:C.muted,marginBottom:12}}>{c.issuer}</div>
-            <Tag c={c.color}>{c.status}</Tag>
-            <div style={{fontSize:9,color:C.dim,marginTop:8}}>{c.date}</div>
-          </Card>
+          <CertCard key={c.id} c={c} mobile={mobile}/>
         ))}
       </div>
 
       <SLabel accent={C.muted}>LEARNING ROADMAP</SLabel>
       <div style={{display:"flex",flexDirection:"column",gap:0}}>
-        {roadmap.map((r,i,arr)=>(
-          <div key={i} style={{display:"flex",gap:16,alignItems:"flex-start"}}>
+        {data.certs.map((c,i,arr)=>(
+          <div key={c.id} style={{display:"flex",gap:16,alignItems:"flex-start"}}>
             <div style={{display:"flex",flexDirection:"column",alignItems:"center",flexShrink:0,width:20}}>
               <div style={{width:14,height:14,borderRadius:"50%",marginTop:3,flexShrink:0,
-                background:r.done?C.g:r.active?C.o:C.border2,
-                boxShadow:r.active?`0 0 10px ${C.o}`:r.done?`0 0 8px ${C.g}`:"none",
-                border:r.active?`2px solid ${C.o}44`:"none"}}/>
+                background:c.status==="Earned"?C.g:c.status==="In Progress"?C.o:C.border2,
+                boxShadow:c.status==="In Progress"?`0 0 10px ${C.o}`:c.status==="Earned"?`0 0 8px ${C.g}`:"none",
+                border:c.status==="In Progress"?`2px solid ${C.o}44`:"none"}}/>
               {i<arr.length-1&&<div style={{width:1,flex:1,background:C.border,minHeight:32}}/>}
             </div>
             <div style={{paddingBottom:22,flex:1}}>
-              <div style={{fontSize:12,color:r.done?C.g:r.active?"#fff":C.muted,fontWeight:r.active?700:400}}>{r.label}</div>
-              <div style={{fontSize:10,color:C.dim,marginTop:2}}>{r.note}</div>
-              <div style={{fontSize:9,color:C.dim,marginTop:1}}>{r.date}</div>
+              <div style={{fontSize:12,
+                color:c.status==="Earned"?C.g:c.status==="In Progress"?"#fff":C.muted,
+                fontWeight:c.status==="In Progress"?700:400}}>
+                {c.name} — {c.issuer}
+              </div>
+              {c.difficultyNote&&<div style={{fontSize:10,color:C.dim,marginTop:2}}>{c.difficultyNote}</div>}
+              <div style={{fontSize:9,color:C.dim,marginTop:1}}>{c.date}</div>
             </div>
           </div>
         ))}
@@ -1180,13 +1301,55 @@ function CertsPage({data,mobile,tablet}){
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  CONTACT
-// ═══════════════════════════════════════════════════════════════════════════════
+// XSS sanitizer — strips all HTML tags and dangerous characters
+function sanitize(str){
+  if(!str) return "";
+  return String(str)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#x27;")
+    .replace(/\//g,"&#x2F;")
+    .slice(0,2000); // max length
+}
+
 function ContactPage({data,mobile}){
   const [form,setForm]=useState({name:"",email:"",subject:"",message:""});
   const [sent,setSent]=useState(false);
+  const [error,setError]=useState("");
   const f=(k,v)=>setForm(p=>({...p,[k]:v}));
+
+  // Basic email validation
+  const validEmail=(e)=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+
+  const submit=()=>{
+    setError("");
+    if(!form.name.trim())    return setError("Name is required.");
+    if(!validEmail(form.email)) return setError("Enter a valid email address.");
+    if(!form.message.trim()) return setError("Message cannot be empty.");
+    if(form.message.length<10) return setError("Message is too short.");
+
+    // Sanitize all fields before saving
+    const msg={
+      id:Date.now(),
+      date:new Date().toISOString(),
+      name:sanitize(form.name.trim()),
+      email:sanitize(form.email.trim()),
+      subject:sanitize(form.subject.trim()||"No subject"),
+      message:sanitize(form.message.trim()),
+      read:false,
+    };
+
+    // Save to localStorage messages list
+    try {
+      const existing=JSON.parse(localStorage.getItem("sp_messages")||"[]");
+      localStorage.setItem("sp_messages",JSON.stringify([msg,...existing]));
+    } catch{}
+
+    setSent(true);
+    setForm({name:"",email:"",subject:"",message:""});
+  };
 
   if(sent) return (
     <div style={{maxWidth:600,margin:"0 auto",padding:"100px 28px",textAlign:"center"}}>
@@ -1226,11 +1389,11 @@ function ContactPage({data,mobile}){
         {/* Form */}
         <div style={{display:"flex",flexDirection:"column",gap:12}}>
           <div>
-            <div style={{fontSize:9,color:C.muted,letterSpacing:1.5,marginBottom:5}}>NAME</div>
+            <div style={{fontSize:9,color:C.muted,letterSpacing:1.5,marginBottom:5}}>NAME *</div>
             <Input value={form.name} onChange={e=>f("name",e.target.value)} placeholder="Your name"/>
           </div>
           <div>
-            <div style={{fontSize:9,color:C.muted,letterSpacing:1.5,marginBottom:5}}>EMAIL</div>
+            <div style={{fontSize:9,color:C.muted,letterSpacing:1.5,marginBottom:5}}>EMAIL *</div>
             <Input value={form.email} onChange={e=>f("email",e.target.value)} placeholder="you@email.com" type="email"/>
           </div>
           <div>
@@ -1238,12 +1401,21 @@ function ContactPage({data,mobile}){
             <Input value={form.subject} onChange={e=>f("subject",e.target.value)} placeholder="Collaboration / Question / Other"/>
           </div>
           <div>
-            <div style={{fontSize:9,color:C.muted,letterSpacing:1.5,marginBottom:5}}>MESSAGE</div>
+            <div style={{fontSize:9,color:C.muted,letterSpacing:1.5,marginBottom:5}}>MESSAGE *</div>
             <Input value={form.message} onChange={e=>f("message",e.target.value)} placeholder="Your message..." multiline rows={5}/>
           </div>
-          <Btn onClick={()=>setSent(true)} full disabled={!form.name||!form.email||!form.message}>
+          {error&&(
+            <div style={{background:C.r+"12",border:`1px solid ${C.r}44`,borderRadius:5,
+              padding:"8px 12px",fontSize:11,color:C.r}}>
+              ⚠ {error}
+            </div>
+          )}
+          <Btn onClick={submit} full disabled={!form.name||!form.email||!form.message}>
             SEND MESSAGE →
           </Btn>
+          <div style={{fontSize:9,color:C.dim,textAlign:"center"}}>
+            All inputs are sanitized. No tracking, no spam.
+          </div>
         </div>
       </div>
     </div>
@@ -1304,6 +1476,7 @@ function AdminDashboard({data,update,mobile,tablet}){
     {id:"certs",     label:"CERTS",      icon:"🏆", accent:"#f59e0b"},
     {id:"about",     label:"ABOUT",      icon:"👤", accent:C.muted},
     {id:"stats",     label:"STATS",      icon:"📊", accent:C.o},
+    {id:"messages",  label:"MESSAGES",   icon:"✉️", accent:C.b},
     {id:"tracker",   label:"TRACKER",    icon:"🧠", accent:C.g},
     {id:"skillmap",  label:"SKILL MAP",  icon:"⚙️", accent:C.o},
   ];
@@ -1352,6 +1525,7 @@ function AdminDashboard({data,update,mobile,tablet}){
         {section==="certs"     && <ACerts     data={data} update={update} mobile={mobile}/>}
         {section==="about"     && <AAbout     data={data} update={update} mobile={mobile}/>}
         {section==="stats"     && <AStats     data={data} update={update} mobile={mobile}/>}
+        {section==="messages"  && <AMessages  mobile={mobile}/>}
         {section==="tracker"   && <ATracker   data={data} update={update} mobile={mobile}/>}
         {section==="skillmap"  && <ASkillMap  data={data} update={update} mobile={mobile}/>}
       </main>
@@ -1677,28 +1851,62 @@ function ABlog({data,update,mobile}){
 // ── Certs ─────────────────────────────────────────────────────────────────────
 function ACerts({data,update,mobile}){
   const [adding,setAdding]=useState(false);
-  const fields=[
-    {key:"name",   label:"CERT NAME",      placeholder:"eJPTv2"},
-    {key:"issuer", label:"ISSUER",         placeholder:"eLearnSecurity"},
-    {key:"date",   label:"DATE",           placeholder:"2025"},
-    {key:"status", label:"STATUS",type:"select",opts:["Earned","In Progress","Planned"]},
-  ];
+  const [editing,setEditing]=useState(null);
   const COLORS={"Earned":C.g,"In Progress":C.o,"Planned":"#6a7aaa"};
+  const fields=[
+    {key:"name",         label:"CERT NAME",             placeholder:"eJPTv2"},
+    {key:"issuer",       label:"ISSUER",                placeholder:"eLearnSecurity"},
+    {key:"date",         label:"DATE",                  placeholder:"2025"},
+    {key:"status",       label:"STATUS",      type:"select",opts:["Earned","In Progress","Planned"]},
+    {key:"difficulty",   label:"DIFFICULTY",  type:"select",opts:["Beginner","Intermediate","Intermediate-Advanced","Advanced","Expert"]},
+    {key:"logoUrl",      label:"LOGO IMAGE URL",        placeholder:"https://example.com/badge.png",full:true},
+    {key:"difficultyNote",label:"DIFFICULTY NOTE",      type:"textarea",full:true,placeholder:"How hard was it really?"},
+    {key:"review",       label:"MY REVIEW",             type:"textarea",full:true,placeholder:"Your honest thoughts about the cert..."},
+    {key:"studyResources",label:"STUDY RESOURCES",      type:"textarea",full:true,placeholder:"Courses, platforms, books you used..."},
+    {key:"studyTime",    label:"STUDY TIME",            placeholder:"6 weeks, ~2h/day"},
+    {key:"writeup",      label:"EXAM WRITEUP / NOTES",  type:"textarea",full:true,placeholder:"Tips, what to expect, your experience on exam day..."},
+  ];
   const add=(v)=>{
     update(d=>({...d,certs:[...d.certs,{...v,id:Date.now(),color:COLORS[v.status]||C.g}]}));
     setAdding(false);
+  };
+  const save=(id,v)=>{
+    update(d=>({...d,certs:d.certs.map(c=>c.id!==id?c:{...c,...v,color:COLORS[v.status]||c.color})}));
+    setEditing(null);
   };
   const del=(id)=>update(d=>({...d,certs:d.certs.filter(c=>c.id!==id)}));
   return (
     <div>
       <ATitleBar label="CERTIFICATIONS">
-        <Btn sm accent="#f59e0b" onClick={()=>setAdding(true)}>+ ADD</Btn>
+        <Btn sm accent="#f59e0b" onClick={()=>{setAdding(true);setEditing(null);}}>+ ADD</Btn>
       </ATitleBar>
       {adding&&<AForm fields={fields} onSave={add} onCancel={()=>setAdding(false)} mobile={mobile}/>}
-      <AList items={data.certs} renderRow={(c)=>(
-        <ARow key={c.id} title={c.name} sub={`${c.issuer} · ${c.date}`}
-          tags={[c.status]} accent={c.color} onDelete={()=>del(c.id)}/>
-      )}/>
+      <div style={{display:"flex",flexDirection:"column",gap:9}}>
+        {data.certs.map(c=>(
+          <div key={c.id}>
+            {editing===c.id
+              ? <AForm fields={fields} initial={c} onSave={v=>save(c.id,v)} onCancel={()=>setEditing(null)} mobile={mobile}/>
+              : <div style={{background:C.bg2,border:`1px solid ${C.border}`,borderRadius:6,padding:"11px 14px",
+                  display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:12,color:"#fff",fontWeight:600}}>{c.name}</div>
+                    <div style={{fontSize:10,color:C.muted,marginTop:2}}>{c.issuer} · {c.date}</div>
+                    <div style={{display:"flex",gap:5,marginTop:5,flexWrap:"wrap"}}>
+                      <Tag c={c.color}>{c.status}</Tag>
+                      {c.review&&<Tag c={C.p}>💬 Review</Tag>}
+                      {c.studyResources&&<Tag c={C.b}>📚 Resources</Tag>}
+                      {c.writeup&&<Tag c={C.g}>📝 Writeup</Tag>}
+                    </div>
+                  </div>
+                  <div style={{display:"flex",gap:7}}>
+                    <Btn sm outline accent={C.b} onClick={()=>setEditing(c.id)}>EDIT</Btn>
+                    <Btn sm outline accent={C.r} onClick={()=>del(c.id)}>DEL</Btn>
+                  </div>
+                </div>
+            }
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -1751,26 +1959,169 @@ function AAbout({data,update,mobile}){
   );
 }
 
-// ── Stats editor ──────────────────────────────────────────────────────────────
 function AStats({data,update,mobile}){
-  const [vals,setVals]=useState({...data.stats});
-  const f=(k,v)=>setVals(p=>({...p,[k]:v}));
-  const save=()=>update(d=>({...d,stats:{...vals,ctfs:+vals.ctfs,writeups:+vals.writeups,tools:+vals.tools,certs:+vals.certs,streak:+vals.streak,solved:+vals.solved}}));
-  const labels={ctfs:"CTFs Played",writeups:"Writeups Published",tools:"Tools Built",certs:"Certs Earned",streak:"Day Streak",solved:"Challenges Solved"};
+  const stats=data.stats.customStats||[];
+  const setStatField=(i,k,v)=>{
+    const next=stats.map((s,si)=>si!==i?s:{...s,[k]:k==="value"?+v:v});
+    update(d=>({...d,stats:{...d.stats,customStats:next}}));
+  };
+  const addStat=()=>{
+    update(d=>({...d,stats:{...d.stats,
+      customStats:[...stats,{label:"New Stat",value:0,icon:"📊"}]
+    }}));
+  };
+  const delStat=(i)=>{
+    update(d=>({...d,stats:{...d.stats,
+      customStats:stats.filter((_,si)=>si!==i)
+    }}));
+  };
   return (
     <div>
-      <ATitleBar label="CTF STATS & ACHIEVEMENTS"/>
-      <Card>
-        <div style={{display:"grid",gridTemplateColumns:mobile?"1fr 1fr":"repeat(3,1fr)",gap:11,marginBottom:13}}>
-          {Object.keys(vals).map(k=>(
-            <div key={k}>
-              <div style={{fontSize:9,color:C.muted,letterSpacing:1.5,marginBottom:4}}>{labels[k]||k.toUpperCase()}</div>
-              <Input type="number" value={vals[k]} onChange={e=>f(k,e.target.value)}/>
+      <ATitleBar label="CTF STATS & ACHIEVEMENTS">
+        <Btn sm accent={C.o} onClick={addStat}>+ ADD STAT</Btn>
+      </ATitleBar>
+      <div style={{fontSize:10,color:C.muted,marginBottom:16}}>
+        These show as cards on your home page. Edit label, value, and emoji icon freely.
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:mobile?"1fr":"1fr 1fr",gap:10}}>
+        {stats.map((s,i)=>(
+          <Card key={i} style={{padding:"14px 16px"}}>
+            <div style={{display:"flex",gap:8,marginBottom:9,alignItems:"center"}}>
+              <Input value={s.icon} onChange={e=>setStatField(i,"icon",e.target.value)}
+                style={{width:44,textAlign:"center",fontSize:18,padding:"4px"}}/>
+              <Input value={s.label} onChange={e=>setStatField(i,"label",e.target.value)}
+                placeholder="Stat label" style={{flex:1}}/>
+              <button onClick={()=>delStat(i)} style={{
+                background:"none",border:`1px solid ${C.r}44`,color:C.r,
+                borderRadius:4,padding:"4px 8px",fontSize:10,flexShrink:0}}>✕</button>
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <span style={{fontSize:9,color:C.muted,letterSpacing:1,flexShrink:0}}>VALUE</span>
+              <Input type="number" value={s.value} onChange={e=>setStatField(i,"value",e.target.value)}
+                style={{width:80}}/>
+              <div style={{fontFamily:"Orbitron",fontSize:20,color:C.g,marginLeft:"auto"}}>{s.value}</div>
+            </div>
+          </Card>
+        ))}
+      </div>
+      {stats.length===0&&(
+        <div style={{color:C.dim,textAlign:"center",padding:"28px 0",
+          border:`1px dashed ${C.border}`,borderRadius:7,fontSize:11}}>
+          No stats yet — click + ADD STAT
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Messages inbox ────────────────────────────────────────────────────────────
+function AMessages({mobile}){
+  const [msgs,setMsgs]=useState(()=>{
+    try { return JSON.parse(localStorage.getItem("sp_messages")||"[]"); } catch { return []; }
+  });
+  const [sel,setSel]=useState(null);
+
+  const markRead=(id)=>{
+    const next=msgs.map(m=>m.id!==id?m:{...m,read:true});
+    setMsgs(next);
+    localStorage.setItem("sp_messages",JSON.stringify(next));
+  };
+  const del=(id)=>{
+    const next=msgs.filter(m=>m.id!==id);
+    setMsgs(next);
+    setSel(null);
+    localStorage.setItem("sp_messages",JSON.stringify(next));
+  };
+  const unread=msgs.filter(m=>!m.read).length;
+
+  // Safe text display — already sanitized on save, render as text only
+  const safeText=(str)=>String(str||"");
+
+  return (
+    <div>
+      <ATitleBar label="MESSAGES INBOX">
+        <div style={{fontSize:10,color:C.muted}}>
+          {unread>0&&<Tag c={C.r}>{unread} unread</Tag>}
+          {unread===0&&<Tag c={C.g}>All read</Tag>}
+        </div>
+      </ATitleBar>
+
+      {msgs.length===0&&(
+        <div style={{color:C.dim,textAlign:"center",padding:"48px 0",
+          border:`1px dashed ${C.border}`,borderRadius:7,fontSize:11}}>
+          No messages yet. When someone submits the contact form it shows here.
+        </div>
+      )}
+
+      <div style={{display:"grid",gridTemplateColumns:sel&&!mobile?"1fr 1fr":"1fr",gap:12}}>
+        {/* List */}
+        <div style={{display:"flex",flexDirection:"column",gap:7}}>
+          {msgs.map(m=>(
+            <div key={m.id}
+              onClick={()=>{setSel(m);markRead(m.id);}}
+              style={{background:sel?.id===m.id?C.b+"12":m.read?C.bg2:C.bg1,
+                border:`1px solid ${sel?.id===m.id?C.b+"66":m.read?C.border:C.b+"33"}`,
+                borderRadius:6,padding:"11px 14px",cursor:"pointer",transition:"all .15s"}}>
+              <div style={{display:"flex",justifyContent:"space-between",gap:8,marginBottom:4}}>
+                <div style={{fontSize:12,color:m.read?"#fff":"#fff",fontWeight:m.read?400:700,
+                  overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                  {safeText(m.name)}
+                </div>
+                <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0}}>
+                  {!m.read&&<div style={{width:6,height:6,borderRadius:"50%",background:C.b}}/>}
+                  <span style={{fontSize:9,color:C.dim}}>
+                    {new Date(m.date).toLocaleDateString("en-US",{month:"short",day:"numeric"})}
+                  </span>
+                </div>
+              </div>
+              <div style={{fontSize:10,color:C.muted,marginBottom:3}}>{safeText(m.email)}</div>
+              <div style={{fontSize:11,color:C.muted,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                {safeText(m.subject)}
+              </div>
             </div>
           ))}
         </div>
-        <Btn sm onClick={save}>SAVE STATS</Btn>
-      </Card>
+
+        {/* Detail panel */}
+        {sel&&(
+          <div className="fin" style={{background:C.bg1,border:`1px solid ${C.border}`,
+            borderRadius:7,padding:"18px 20px"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16}}>
+              <div>
+                <div style={{fontFamily:"Orbitron",fontSize:13,color:"#fff",fontWeight:700,marginBottom:4}}>
+                  {safeText(sel.name)}
+                </div>
+                <div style={{fontSize:11,color:C.b}}>{safeText(sel.email)}</div>
+              </div>
+              <div style={{display:"flex",gap:7}}>
+                <Btn sm outline accent={C.r} onClick={()=>del(sel.id)}>DELETE</Btn>
+                <button onClick={()=>setSel(null)} style={{
+                  background:"none",border:`1px solid ${C.border}`,color:C.muted,
+                  borderRadius:4,padding:"5px 10px",fontSize:10}}>✕</button>
+              </div>
+            </div>
+            <div style={{fontSize:9,color:C.muted,letterSpacing:1.5,marginBottom:4}}>SUBJECT</div>
+            <div style={{fontSize:12,color:C.text,marginBottom:14,
+              background:C.bg2,border:`1px solid ${C.border}`,borderRadius:5,padding:"8px 12px"}}>
+              {safeText(sel.subject)}
+            </div>
+            <div style={{fontSize:9,color:C.muted,letterSpacing:1.5,marginBottom:4}}>MESSAGE</div>
+            <div style={{fontSize:12,color:C.text,lineHeight:1.8,whiteSpace:"pre-wrap",
+              background:C.bg2,border:`1px solid ${C.border}`,borderRadius:5,padding:"12px 14px",
+              minHeight:120}}>
+              {safeText(sel.message)}
+            </div>
+            <div style={{fontSize:9,color:C.dim,marginTop:10,textAlign:"right"}}>
+              Received: {new Date(sel.date).toLocaleString()}
+            </div>
+            <div style={{marginTop:14}}>
+              <a href={`mailto:${safeText(sel.email)}?subject=Re: ${safeText(sel.subject)}`}>
+                <Btn sm accent={C.g}>✉️ REPLY VIA EMAIL</Btn>
+              </a>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
